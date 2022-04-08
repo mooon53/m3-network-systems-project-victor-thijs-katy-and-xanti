@@ -1,5 +1,8 @@
 import client.*;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.io.Console;
 import java.util.concurrent.BlockingQueue;
@@ -33,11 +36,15 @@ public class MyProtocol{
 
         // handle sending from stdin from this thread.
         try{
-            Console console = System.console();
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String input = "";
             while(true){
-                input = console.readLine(); // read input
+                input = br.readLine(); // read input
+                System.out.println(input);
                 byte[] inputBytes = input.getBytes(); // get bytes from input
+                for (byte i:inputBytes) {
+                    System.out.println(i);
+                }
                 ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
                 toSend.put( inputBytes, 0, inputBytes.length ); // copy the input string into the byte buffer.                   
                 Message msg;
@@ -48,7 +55,7 @@ public class MyProtocol{
                 }
                 sendingQueue.put(msg);
             }
-        } catch (InterruptedException e){
+        } catch (InterruptedException | IOException e){
             System.exit(2);
         }      
     }
@@ -87,6 +94,7 @@ public class MyProtocol{
                     } else if (m.getType() == MessageType.DATA){ // We received a data frame!
                         System.out.print("DATA: ");
                         printByteBuffer( m.getData(), m.getData().capacity() ); //Just print the data
+                        System.out.println(m.getData());
                     } else if (m.getType() == MessageType.DATA_SHORT){ // We received a short data frame!
                         System.out.print("DATA_SHORT: ");
                         printByteBuffer( m.getData(), m.getData().capacity() ); //Just print the data
