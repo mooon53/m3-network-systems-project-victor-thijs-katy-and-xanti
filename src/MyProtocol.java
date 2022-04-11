@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -95,7 +96,18 @@ public class MyProtocol {
 						case DATA:
 							System.out.print("DATA: ");
 							printByteBuffer(m.getData(), m.getData().capacity()); //Just print the data
-							System.out.println(m.getData());
+							try {
+								for (int i = 0; i < m.getData().capacity(); i++) {
+									System.out.print(Character.toString(m.getData().get(i)));
+									BitSet bitset = BitSet.valueOf(m.getData());
+									for (int n = 0; n<bitset.length(); n++) {
+										int bit = bitset.get(n) ? 1:0;
+										System.out.print(bit);
+									}
+								}
+							} catch (IllegalArgumentException e) {
+								System.out.println(";");
+							}
 							break;
 						case DATA_SHORT:
 							System.out.print("DATA_SHORT: ");
