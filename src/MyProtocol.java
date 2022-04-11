@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.io.Console;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,7 +36,7 @@ public class MyProtocol {
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			String input;
-			while (br.ready()) {
+			while (!br.ready()) {
 				input = br.readLine(); // read input
 				System.out.println(input);
 				byte[] inputBytes = input.getBytes(); // get bytes from input
@@ -89,26 +88,35 @@ public class MyProtocol {
 					switch (m.getType()) {
 						case BUSY:
 							System.out.println("BUSY");
+							break;
 						case FREE:
 							System.out.println("FREE");
+							break;
 						case DATA:
 							System.out.print("DATA: ");
 							printByteBuffer(m.getData(), m.getData().capacity()); //Just print the data
 							System.out.println(m.getData());
+							break;
 						case DATA_SHORT:
 							System.out.print("DATA_SHORT: ");
 							printByteBuffer(m.getData(), m.getData().capacity()); //Just print the data
+							break;
 						case DONE_SENDING:
 							System.out.println("DONE_SENDING");
+							break;
 						case HELLO:
 							System.out.println("HELLO");
+							break;
 						case SENDING:
 							System.out.println("SENDING");
+							break;
 						case END:
 							System.out.println("END");
 							System.exit(0);
+							break;
 						default:
 							System.out.println();
+							break;
 					}
 				} catch (InterruptedException e) {
 					System.err.println("Failed to take from queue: " + e);
