@@ -8,7 +8,6 @@ import java.util.concurrent.BlockingQueue;
 
 
 public class Client {
-
 	private SocketChannel sock;
 	private Sender sender;
 	private Listener listener;
