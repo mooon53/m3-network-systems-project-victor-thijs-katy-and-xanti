@@ -151,32 +151,44 @@ public class Client {
 							messageReceiving = false;
 						}
 					} else {
-						if (d == 0x09) { // Connection successfull!
-							// System.out.println("CONNECTED");
-							receivedQueue.put(new Message(MessageType.HELLO));
-						} else if (d == 0x01) { // FREE
-							// System.out.println("FREE");
-							receivedQueue.put(new Message(MessageType.FREE));
-						} else if (d == 0x02) { // BUSY
-							// System.out.println("BUSY");
-							receivedQueue.put(new Message(MessageType.BUSY));
-						} else if (d == 0x03) { // DATA!
-							messageLength = -1;
-							messageReceiving = true;
-							shortData = false;
-						} else if (d == 0x04) { // SENDING
-							// System.out.println("SENDING");
-							receivedQueue.put(new Message(MessageType.SENDING));
-						} else if (d == 0x05) { // DONE_SENDING
-							// System.out.println("DONE_SENDING");
-							receivedQueue.put(new Message(MessageType.DONE_SENDING));
-						} else if (d == 0x06) { // DATA_SHORT
-							messageLength = -1;
-							messageReceiving = true;
-							shortData = true;
-						} else if (d == 0x08) { // END, connection closing
-							// System.out.println("END");
-							receivedQueue.put(new Message(MessageType.END));
+						switch (d) {
+							case 0x09:
+								// System.out.println("CONNECTED");
+								receivedQueue.put(new Message(MessageType.HELLO));
+								break;
+							case 0x01:
+								// System.out.println("FREE");
+								receivedQueue.put(new Message(MessageType.FREE));
+								break;
+							case 0x02:
+								// System.out.println("BUSY");
+								receivedQueue.put(new Message(MessageType.BUSY));
+								break;
+							case 0x03:
+								messageLength = -1;
+								messageReceiving = true;
+								shortData = false;
+								break;
+							case 0x04:
+								// System.out.println("SENDING");
+								receivedQueue.put(new Message(MessageType.SENDING));
+								break;
+							case 0x05:
+								// System.out.println("DONE_SENDING");
+								receivedQueue.put(new Message(MessageType.DONE_SENDING));
+								break;
+							case 0x06:
+								messageLength = -1;
+								messageReceiving = true;
+								shortData = true;
+								break;
+							case 0x08:
+								// System.out.println("END");
+								receivedQueue.put(new Message(MessageType.END));
+								break;
+							default:
+								System.out.println();
+								break;
 						}
 					}
 				}
@@ -189,7 +201,7 @@ public class Client {
 		public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
 			System.out.print("DATA: ");
 			for (int i = 0; i < bytesLength; i++) {
-				System.out.print(Byte.toString(bytes.get(i)) + " ");
+				System.out.print(bytes.get(i) + " ");
 			}
 			System.out.println();
 		}
