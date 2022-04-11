@@ -99,11 +99,11 @@ public class MyProtocol {
 							try {
 								for (int i = 0; i < m.getData().capacity(); i++) {
 									System.out.print(Character.toString(m.getData().get(i)));
-									BitSet bitset = BitSet.valueOf(m.getData());
+									/*BitSet bitset = BitSet.valueOf(m.getData());
 									for (int n = 0; n<bitset.length(); n++) {
 										int bit = bitset.get(n) ? 1:0;
 										System.out.print(bit);
-									}
+									}*/
 								}
 							} catch (IllegalArgumentException e) {
 								System.out.println(";");
