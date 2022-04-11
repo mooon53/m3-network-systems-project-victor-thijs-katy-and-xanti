@@ -17,19 +17,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MyProtocol {
 
 	// The host to connect to. Set this to localhost when using the audio interface tool.
-	private static String SERVER_IP = "netsys.ewi.utwente.nl"; //"127.0.0.1";
+	private static final String SERVER_IP = "netsys.ewi.utwente.nl"; //"127.0.0.1";
 	// The port to connect to. 8954 for the simulation server.
-	private static int SERVER_PORT = 8954;
+	private static final int SERVER_PORT = 8954;
 	// The frequency to use.
 	private static int frequency = 500 + 9 * 100;//TODO: Set this to your group frequency!
 
-	private Client client;
-	private BlockingQueue<Message> receivedQueue;
-	private BlockingQueue<Message> sendingQueue;
+	private final Client client;
 
 	public MyProtocol(String server_ip, int server_port, int frequency) {
-		receivedQueue = new LinkedBlockingQueue<Message>();
-		sendingQueue = new LinkedBlockingQueue<Message>();
+		BlockingQueue<Message> receivedQueue = new LinkedBlockingQueue<>();
+		BlockingQueue<Message> sendingQueue = new LinkedBlockingQueue<>();
 
 		client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue); // Give the client the Queues to use
 
@@ -38,8 +36,8 @@ public class MyProtocol {
 		// handle sending from stdin from this thread.
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			String input = "";
-			while (true) {
+			String input;
+			while (br.ready()) {
 				input = br.readLine(); // read input
 				System.out.println(input);
 				byte[] inputBytes = input.getBytes(); // get bytes from input
@@ -61,7 +59,7 @@ public class MyProtocol {
 		}
 	}
 
-	public static void main(String args[]) {
+	public static void main(String[] args) {
 		if (args.length > 0) {
 			frequency = Integer.parseInt(args[0]);
 		}
@@ -69,7 +67,7 @@ public class MyProtocol {
 	}
 
 	private class receiveThread extends Thread {
-		private BlockingQueue<Message> receivedQueue;
+		private final BlockingQueue<Message> receivedQueue;
 
 		public receiveThread(BlockingQueue<Message> receivedQueue) {
 			super();
@@ -78,7 +76,7 @@ public class MyProtocol {
 
 		public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
 			for (int i = 0; i < bytesLength; i++) {
-				System.out.print(Byte.toString(bytes.get(i)) + " ");
+				System.out.print(bytes.get(i) + " ");
 			}
 			System.out.println();
 		}
@@ -110,7 +108,7 @@ public class MyProtocol {
 							System.out.println("END");
 							System.exit(0);
 						default:
-							System.out.println("");
+							System.out.println();
 					}
 				} catch (InterruptedException e) {
 					System.err.println("Failed to take from queue: " + e);
