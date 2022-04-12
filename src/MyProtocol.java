@@ -70,9 +70,7 @@ public class MyProtocol {
 								concatByteArrays(new byte[]{packet[1]}, inputBytes)))));
 
 				// data
-				for (int i = 0; i < inputBytes.length; i++) {
-					packet[4 + i] = inputBytes[i];
-				}
+				System.arraycopy(inputBytes, 0, packet, 4, inputBytes.length);
 
 				ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
 				toSend.put(inputBytes, 0, inputBytes.length); // copy the input string into the byte buffer.
@@ -122,13 +120,8 @@ public class MyProtocol {
 
     public byte[] concatByteArrays(byte[] array1, byte[] array2) {
         byte[] result = new byte[array1.length + array2.length];
-        for (int i = 0; i < array1.length; i++) {
-            result[i] = array1[i];
-        }
-
-        for (int i = 0; i < array2.length; i++) {
-            result[i+ array1.length] = array2[i];
-        }
+	    System.arraycopy(array1, 0, result, 0, array1.length);
+	    System.arraycopy(array2, 0, result, array1.length, array2.length);
 
         return result;
     }
