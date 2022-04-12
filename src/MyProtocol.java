@@ -66,6 +66,61 @@ public class MyProtocol {
 		new MyProtocol(SERVER_IP, SERVER_PORT, frequency);
 	}
 
+	public byte stringToByte(String string) {
+        byte count = 0;
+        for(int i = 0; i < string.length(); i++) {
+            count += Character.getNumericValue(string.charAt(i)) * Math.pow(2, string.length() - (i+1));
+        }
+        return count;
+    }
+
+    public String bytesToString(byte[] input, boolean addZeroes) {
+        String string = "";
+        for (byte b : input) {
+            BitSet bitset = BitSet.valueOf(new byte[]{b});
+            int start;
+
+            if (addZeroes) {
+                start = 8;
+            } else {
+                start = bitset.length() - 1;
+            }
+
+            for (int i = start; i >= 0; i--) {
+                string += bitset.get(i) ? 1 : 0;
+            }
+            string += " ";
+        }
+        return string;
+    }
+
+    public byte xorCheck(byte[] bytes) {
+        if (bytes.length >= 2) {
+            byte xoredByte = (byte) (bytes[0] ^ bytes[1]);
+            for (int i = 2; i < bytes.length; i++) {
+                xoredByte = (byte) (xoredByte ^ bytes[i]);
+            }
+            return xoredByte;
+        } else if (bytes.length == 1) {
+            return bytes[0];
+        } else {
+            return 0;
+        }
+    }
+
+    public byte[] concatArray(byte[] array1, byte[] array2) {
+        byte[] result = new byte[array1.length + array2.length];
+        for (int i = 0; i < array1.length; i++) {
+            result[i] = array1[i];
+        }
+
+        for (int i = 0; i < array2.length; i++) {
+            result[i+ array1.length] = array2[i];
+        }
+
+        return result;
+    }
+
 	private class receiveThread extends Thread {
 		private final BlockingQueue<Message> receivedQueue;
 
