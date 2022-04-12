@@ -49,24 +49,25 @@ public class MyProtocol {
 				byte[] packet = new byte[32];
 
 				// source node, ack-flag & data-length
-				packet[0] = stringToByte(
-						bytesToString(new byte[]{(byte) nodeID}, false)
-								+ "0" //TODO: ACK-flag algorithm
-								+ bytesToString(new byte[]{(byte) inputBytes.length}, false)
+				packet[0] = bitsetToByte(concatBitSet(new BitSet[]{bytesToBitSet(new byte[]{(byte) nodeID})
+								, new BitSet(1) //TODO: ACK-flag algorithm
+								, bytesToBitSet(new byte[]{(byte) inputBytes.length})})
 				);
 
 				// sequence number; TODO: sequence number
 
 				// syn, next-hop, fragmentation-flag & fragmentation-number
-				packet[2] = stringToByte(
-						"0" //TODO: syn
-								+ bytesToString(new byte[]{(byte) nodeID}, false) //TODO: next-hop
-								+ "0" //TODO: fragmentation-flag
-								+ "0000" //TODO: fragmentation-number
+				packet[2] = bitsetToByte(concatBitSet(new BitSet[]{new BitSet(1), //TODO: syn
+								bytesToBitSet(new byte[]{(byte) nodeID}), //TODO: next-hop
+								new BitSet(1), //TODO: fragmentation-flag
+								new BitSet(4)}) //TODO: fragmentation-number
 				);
 
 				// error detection (ignoring the second and third byte)
-				packet[3] = xorCheck(concatArray(new byte[]{packet[0]}, concatArray(new byte[]{packet[1]}, inputBytes)));
+				packet[3] = xorCheck(new Message(
+						MessageType.DATA,
+						ByteBuffer.wrap(concatByteArrays(new byte[]{packet[0]},
+								concatByteArrays(new byte[]{packet[1]}, inputBytes)))));
 
 				// data
 				for (int i = 0; i < inputBytes.length; i++) {
@@ -95,38 +96,20 @@ public class MyProtocol {
 		new MyProtocol(SERVER_IP, SERVER_PORT, frequency);
 	}
 
-	public byte stringToByte(String string) {
-        byte count = 0;
-        for(int i = 0; i < string.length(); i++) {
-            count += Character.getNumericValue(string.charAt(i)) * Math.pow(2, string.length() - (i+1));
-        }
-        return count;
+	public byte bitsetToByte(BitSet bitset) {
+        if (bitset.length()>8) return 0;
+		return bitset.toByteArray()[0];
     }
 
-    public String bytesToString(byte[] input, boolean addZeroes) {
-        String string = "";
-        for (byte b : input) {
-            BitSet bitset = BitSet.valueOf(new byte[]{b});
-            int start;
-
-            if (addZeroes) {
-                start = 8;
-            } else {
-                start = bitset.length() - 1;
-            }
-
-            for (int i = start; i >= 0; i--) {
-                string += bitset.get(i) ? 1 : 0;
-            }
-            string += " ";
-        }
-        return string;
+    public BitSet bytesToBitSet(byte[] input) {
+        return BitSet.valueOf(input);
     }
 
-    public byte xorCheck(byte[] bytes) {
-        if (bytes.length >= 2) {
-            byte xoredByte = (byte) (bytes[0] ^ bytes[1]);
-            for (int i = 2; i < bytes.length; i++) {
+    public byte xorCheck(Message message) {
+        byte[] bytes = message.getData().array();
+		if (bytes.length >= 2) {
+            byte xoredByte = bytes[0];
+            for (int i = 1; i < bytes.length; i++) {
                 xoredByte = (byte) (xoredByte ^ bytes[i]);
             }
             return xoredByte;
@@ -137,7 +120,7 @@ public class MyProtocol {
         }
     }
 
-    public byte[] concatArray(byte[] array1, byte[] array2) {
+    public byte[] concatByteArrays(byte[] array1, byte[] array2) {
         byte[] result = new byte[array1.length + array2.length];
         for (int i = 0; i < array1.length; i++) {
             result[i] = array1[i];
@@ -149,6 +132,18 @@ public class MyProtocol {
 
         return result;
     }
+
+	public BitSet concatBitSet(BitSet[] bitsets) {
+		BitSet output = new BitSet();
+		int index = 0;
+		for (int i = 0; i < bitsets.length; i++) {
+			if (i>0) index+=bitsets[i-1].length();
+			for (int n = 0; n < bitsets[i].length(); i++) {
+				if (bitsets[i].get(n)) output.set(index+n);
+			}
+		}
+		return output;
+	}
 
 	private class receiveThread extends Thread {
 		private final BlockingQueue<Message> receivedQueue;
