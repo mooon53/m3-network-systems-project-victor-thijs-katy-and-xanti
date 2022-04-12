@@ -66,10 +66,10 @@ public class MyProtocol {
 				);
 
 				// error detection (ignoring the second and third byte)
-				packet[3] = xorCheck(concatArray(new byte[]{packet[0]}, concatArray(new byte[]{packet[1]}, inputBytes));
+				packet[3] = xorCheck(concatArray(new byte[]{packet[0]}, concatArray(new byte[]{packet[1]}, inputBytes)));
 
 				// data
-				for (int i = 0; i < inputBytes.length ) {
+				for (int i = 0; i < inputBytes.length; i++) {
 					packet[4 + i] = inputBytes[i];
 				}
 
