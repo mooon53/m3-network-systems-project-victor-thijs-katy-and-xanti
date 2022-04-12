@@ -24,6 +24,7 @@ public class MyProtocol {
 	private static int frequency = 500 + 9 * 100;//TODO: Set this to your group frequency!
 
 	private final Client client;
+	private int nodeID;
 
 	public MyProtocol(String server_ip, int server_port, int frequency) {
 		BlockingQueue<Message> receivedQueue = new LinkedBlockingQueue<>();
@@ -44,6 +45,34 @@ public class MyProtocol {
 				for (byte i : inputBytes) {
 					System.out.println(i);
 				}
+
+				byte[] packet = new byte[32];
+
+				// source node, ack-flag & data-length
+				packet[0] = stringToByte(
+						bytesToString(new byte[]{(byte) nodeID}, false)
+								+ "0" //TODO: ACK-flag algorithm
+								+ bytesToString(new byte[]{(byte) inputBytes.length}, false)
+				);
+
+				// sequence number; TODO: sequence number
+
+				// syn, next-hop, fragmentation-flag & fragmentation-number
+				packet[2] = stringToByte(
+						"0" //TODO: syn
+								+ bytesToString(new byte[]{(byte) nodeID}, false) //TODO: next-hop
+								+ "0" //TODO: fragmentation-flag
+								+ "0000" //TODO: fragmentation-number
+				);
+
+				// error detection (ignoring the second and third byte)
+				packet[3] = xorCheck(concatArray(new byte[]{packet[0]}, concatArray(new byte[]{packet[1]}, inputBytes));
+
+				// data
+				for (int i = 0; i < inputBytes.length ) {
+					packet[4 + i] = inputBytes[i];
+				}
+
 				ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
 				toSend.put(inputBytes, 0, inputBytes.length); // copy the input string into the byte buffer.
 				Message msg;
