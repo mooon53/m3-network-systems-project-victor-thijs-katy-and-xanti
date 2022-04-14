@@ -141,8 +141,8 @@ public class MyProtocol {
         System.arraycopy(array1, 0, result, 0, array1.length);
         System.arraycopy(array2, 0, result, array1.length, array2.length);
 
-		return result;
-	}
+        return result;
+    }
 
     public BitSet concatBitSet(BitSet[] bitsets) {
         BitSet output = new BitSet();
@@ -232,6 +232,9 @@ public class MyProtocol {
                         case END:
                             System.out.println("[END]");
                             System.exit(0);
+                            break;
+                        case SETUP:
+                            System.out.println("[SETUP] your node is: "+ client.getNodeID());
                             break;
                         default:
                             System.out.println();

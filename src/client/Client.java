@@ -18,6 +18,14 @@ public class Client {
 
     private int nodeID;
 
+    public int getNodeID() {
+        return nodeID;
+    }
+
+    public void setNodeID(int nodeID) {
+        this.nodeID = nodeID;
+    }
+
     public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
         System.out.print("DATA: ");
         for (int i = 0; i < bytesLength; i++) {
@@ -69,6 +77,7 @@ public class Client {
                         data.position(0); //reset position just to be sure
                         int length = data.capacity(); //assume capacity is also what we want to send here!
                         ByteBuffer toSend = ByteBuffer.allocate(length + 2);
+                        //TODO: add sending pattern for SETUP
                         if (msg.getType() == MessageType.DATA) {
                             toSend.put((byte) 3);
                         } else { // must be DATA_SHORT due to check above
@@ -219,7 +228,7 @@ public class Client {
         private int messageLength = -1;
         private boolean messageReceiving = false;
         private boolean shortData = false;
-        private boolean setup =  false;
+        private boolean setup = false;
 
         private void parseMessage(ByteBuffer received, int bytesReceived) {
             // printByteBuffer(received, bytesReceived);
@@ -244,7 +253,9 @@ public class Client {
                             temp.put(messageBuffer);
                             temp.rewind();
                             //TODO: put SETUP message
-                            if (shortData) {
+                            if (setup) {
+                                receivedQueue.put(new Message(MessageType.SETUP, temp));
+                            } else if (shortData) {
                                 receivedQueue.put(new Message(MessageType.DATA_SHORT, temp));
                             } else {
                                 receivedQueue.put(new Message(MessageType.DATA, temp));
