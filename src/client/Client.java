@@ -18,23 +18,32 @@ public class Client {
 
 	private int nodeID;
 
-	public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-		System.out.print("DATA: ");
-		for (int i = 0; i < bytesLength; i++) {
-			System.out.print(bytes.get(i) + " ");
-		}
-		System.out.println();
-	}
+    public int getNodeID() {
+        return nodeID;
+    }
 
-	public Client(String server_ip, int server_port, int frequency, BlockingQueue<Message> receivedQueue, BlockingQueue<Message> sendingQueue, int id) {
-		this.receivedQueue = receivedQueue;
-		this.sendingQueue = sendingQueue;
-		this.nodeID = id;
-		try {
-			sock = SocketChannel.open();
-			sock.connect(new InetSocketAddress(server_ip, server_port));
-			listener = new Listener(sock, receivedQueue);
-			sender = new Sender(sock, sendingQueue);
+    public void setNodeID(int nodeID) {
+        this.nodeID = nodeID;
+    }
+
+    public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
+        System.out.print("DATA: ");
+        for (int i = 0; i < bytesLength; i++) {
+            System.out.print(bytes.get(i) + " ");
+        }
+        System.out.println();
+    }
+
+    public Client(String server_ip, int server_port, int frequency, BlockingQueue<Message> receivedQueue, BlockingQueue<Message> sendingQueue, int id) {
+        this.receivedQueue = receivedQueue;
+        this.sendingQueue = sendingQueue;
+        this.nodeID = id;
+        try {
+            sock = SocketChannel.open();
+            sock.connect(new InetSocketAddress(server_ip, server_port));
+            listener = new Listener(sock, receivedQueue);
+            sender = new Sender(sock, sendingQueue);
+            //dont worry, be happy (c)Thijs
 
 			sender.sendConnect(frequency);
 
@@ -222,6 +231,7 @@ public class Client {
 		private int messageLength = -1;
 		private boolean messageReceiving = false;
 		private boolean shortData = false;
+		private boolean setup = false;
 
 		private void parseMessage(ByteBuffer received, int bytesReceived) {
 			// printByteBuffer(received, bytesReceived);
@@ -230,70 +240,78 @@ public class Client {
 				for (int offset = 0; offset < bytesReceived; offset++) {
 					byte d = received.get(offset);
 
-					if (messageReceiving) {
-						if (messageLength == -1) {
-							messageLength = (int) d;
-							messageBuffer = ByteBuffer.allocate(messageLength);
-						} else {
-							messageBuffer.put(d);
-						}
-						if (messageBuffer.position() == messageLength) {
-							// Return DATA here
-							// printByteBuffer(messageBuffer, messageLength);
-							// System.out.println("pos: "+Integer.toString(messageBuffer.position()) );
-							messageBuffer.position(0);
-							ByteBuffer temp = ByteBuffer.allocate(messageLength);
-							temp.put(messageBuffer);
-							temp.rewind();
-							if (shortData) {
-								receivedQueue.put(new Message(MessageType.DATA_SHORT, temp));
-							} else {
-								receivedQueue.put(new Message(MessageType.DATA, temp));
-							}
-							messageReceiving = false;
-						}
-					} else {
-						switch (d) {
-							case 0x09:
-								// System.out.println("CONNECTED");
-								receivedQueue.put(new Message(MessageType.HELLO));
-								break;
-							case 0x01:
-								// System.out.println("FREE");
-								receivedQueue.put(new Message(MessageType.FREE));
-								break;
-							case 0x02:
-								// System.out.println("BUSY");
-								receivedQueue.put(new Message(MessageType.BUSY));
-								break;
-							case 0x03:
-								messageLength = -1;
-								messageReceiving = true;
-								shortData = false;
-								break;
-							case 0x04:
-								// System.out.println("SENDING");
-								receivedQueue.put(new Message(MessageType.SENDING));
-								break;
-							case 0x05:
-								// System.out.println("DONE_SENDING");
-								receivedQueue.put(new Message(MessageType.DONE_SENDING));
-								break;
-							case 0x06:
-								messageLength = -1;
-								messageReceiving = true;
-								shortData = true;
-								break;
-							case 0x08:
-								// System.out.println("END");
-								receivedQueue.put(new Message(MessageType.END));
-								break;
-							default:
-								System.out.println();
-								break;
-						}
-					}
-				}
+                    if (messageReceiving) {
+                        if (messageLength == -1) {
+                            messageLength = (int) d;
+                            messageBuffer = ByteBuffer.allocate(messageLength);
+                        } else {
+                            messageBuffer.put(d);
+                        }
+                        if (messageBuffer.position() == messageLength) {
+                            // Return DATA here
+                            // printByteBuffer(messageBuffer, messageLength);
+                            // System.out.println("pos: "+Integer.toString(messageBuffer.position()) );
+                            messageBuffer.position(0);
+                            ByteBuffer temp = ByteBuffer.allocate(messageLength);
+                            temp.put(messageBuffer);
+                            temp.rewind();
+                            //TODO: put SETUP message
+                            if (setup) {
+                                receivedQueue.put(new Message(MessageType.SETUP, temp));
+                            } else if (shortData) {
+                                receivedQueue.put(new Message(MessageType.DATA_SHORT, temp));
+                            } else {
+                                receivedQueue.put(new Message(MessageType.DATA, temp));
+                            }
+                            messageReceiving = false;
+                        }
+                    } else {
+                        switch (d) {
+                            case 0x09:
+                                // System.out.println("CONNECTED");
+                                receivedQueue.put(new Message(MessageType.HELLO));
+                                break;
+                            case 0x01:
+                                // System.out.println("FREE");
+                                receivedQueue.put(new Message(MessageType.FREE));
+                                break;
+                            case 0x02:
+                                // System.out.println("BUSY");
+                                receivedQueue.put(new Message(MessageType.BUSY));
+                                break;
+                            case 0x03:
+                                messageLength = -1;
+                                messageReceiving = true;
+                                shortData = false;
+                                break;
+                            case 0x04:
+                                // System.out.println("SENDING");
+                                receivedQueue.put(new Message(MessageType.SENDING));
+                                break;
+                            case 0x05:
+                                // System.out.println("DONE_SENDING");
+                                receivedQueue.put(new Message(MessageType.DONE_SENDING));
+                                break;
+                            case 0x06:
+                                messageLength = -1;
+                                messageReceiving = true;
+                                shortData = true;
+                                break;
+                            case 0x08:
+                                // System.out.println("END");
+                                receivedQueue.put(new Message(MessageType.END));
+                                break;
+                            case 0x10:
+                                messageLength = -1;
+                                messageReceiving = true;
+                                setup = true;
+                                break;
+                            default:
+                                System.out.println();
+                                break;
+                        }
+                    }
+                }
 
 			} catch (InterruptedException e) {
 				System.err.println("Failed to put data in receivedQueue: " + e.toString());
