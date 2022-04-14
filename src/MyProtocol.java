@@ -93,6 +93,8 @@ public class MyProtocol {
                 ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
                 toSend.put(inputBytes, 0, inputBytes.length); // copy the input string into the byte buffer.
                 Message msg;
+                //TODO: send the setup and find index using SYN
+
                 if ((input.length()) > 2) {
                     msg = new Message(MessageType.DATA, toSend);
                 } else {
@@ -234,7 +236,7 @@ public class MyProtocol {
                             System.exit(0);
                             break;
                         case SETUP:
-                            System.out.println("[SETUP] your node is: "+ client.getNodeID());
+                            System.out.println("[SETUP]");
                             break;
                         default:
                             System.out.println();

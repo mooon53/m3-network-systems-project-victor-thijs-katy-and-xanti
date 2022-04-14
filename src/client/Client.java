@@ -43,6 +43,8 @@ public class Client {
             sock.connect(new InetSocketAddress(server_ip, server_port));
             listener = new Listener(sock, receivedQueue);
             sender = new Sender(sock, sendingQueue);
+            this.nodeID = 0;
+            //dont worry, be happy (c)Thijs
 
             sender.sendConnect(frequency);
 
@@ -252,7 +254,6 @@ public class Client {
                             ByteBuffer temp = ByteBuffer.allocate(messageLength);
                             temp.put(messageBuffer);
                             temp.rewind();
-                            //TODO: put SETUP message
                             if (setup) {
                                 receivedQueue.put(new Message(MessageType.SETUP, temp));
                             } else if (shortData) {
