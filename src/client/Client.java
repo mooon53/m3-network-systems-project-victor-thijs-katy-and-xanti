@@ -231,6 +231,7 @@ public class Client {
 		private int messageLength = -1;
 		private boolean messageReceiving = false;
 		private boolean shortData = false;
+		private boolean setup = false;
 
 		private void parseMessage(ByteBuffer received, int bytesReceived) {
 			// printByteBuffer(received, bytesReceived);
