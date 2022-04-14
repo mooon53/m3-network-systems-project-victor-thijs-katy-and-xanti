@@ -27,6 +27,6 @@ public class MessageHandler extends Thread {
 		frag = Integer.parseInt(firstByte.substring(6,7))==1;
 		DM = Integer.parseInt(firstByte.substring(7,8))==1;
 		String secondByte = Client.bytesToString(message[1]);
-
+		
 	}
 }

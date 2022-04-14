@@ -212,7 +212,7 @@ public class MyProtocol {
                             System.exit(0);
                             break;
                         case SETUP:
-                            System.out.println("[SETUP] your node is: "+ client.getNodeID());
+                            System.out.println("[SETUP] your node is: "+ nodeID);
                             break;
                         default:
                             System.out.println();
