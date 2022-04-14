@@ -187,27 +187,7 @@ public class MyProtocol {
                             System.out.println("[FREE]");
                             break;
                         case DATA:
-                            // TODO: test this with data-length in the header
-                            byte firstByte = m.getData().get(0);
-                            byte secondByte = m.getData().get(1);
-                            byte thirdByte = m.getData().get(2);
-
-                            System.out.print("[DATA from ");
-                            System.out.print((getBit(firstByte, 0) * 2 + getBit(firstByte, 0) * 1) + "]: ");
-                            try {
-
-                                int dataLength = 16 * getBit(secondByte, 5)
-                                                + 8 * getBit(secondByte, 6)
-                                                + 4 * getBit(secondByte, 7)
-                                                + 2 * getBit(thirdByte, 0)
-                                                + getBit(thirdByte, 1);
-                                for (int i = 0; i < dataLength; i++) {
-                                    System.out.print(((char) m.getData().get(i)));
-                                }
-                                System.out.println();
-                            } catch (IllegalArgumentException e) {
-                                System.out.println(";");
-                            }
+                            Thread messageHandler = new Thread(new MessageHandler(m.getData().array()));
                             break;
                         case DATA_SHORT:
                             System.out.print("[DATA_SHORT]: ");
