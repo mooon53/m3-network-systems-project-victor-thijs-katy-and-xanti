@@ -1,7 +1,4 @@
-import client.Client;
-
-import java.util.BitSet;
-import java.util.Random;
+import control.Client;
 
 public class Test {
 	private static int source = 1;

@@ -1,4 +1,4 @@
-package client;
+package control;
 
 public enum MessageType {
 	FREE,
