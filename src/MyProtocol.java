@@ -211,6 +211,9 @@ public class MyProtocol {
                             System.out.println("[END]");
                             System.exit(0);
                             break;
+                        case SETUP:
+                            System.out.println("[SETUP] your node is: "+ client.getNodeID());
+                            break;
                         default:
                             System.out.println();
                             break;
