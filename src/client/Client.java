@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.BitSet;
 import java.util.concurrent.BlockingQueue;
 
 
@@ -15,6 +16,8 @@ public class Client {
 	private BlockingQueue<Message> receivedQueue;
 	private BlockingQueue<Message> sendingQueue;
 
+	private int nodeID;
+
 	public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
 		System.out.print("DATA: ");
 		for (int i = 0; i < bytesLength; i++) {
@@ -23,9 +26,10 @@ public class Client {
 		System.out.println();
 	}
 
-	public Client(String server_ip, int server_port, int frequency, BlockingQueue<Message> receivedQueue, BlockingQueue<Message> sendingQueue) {
+	public Client(String server_ip, int server_port, int frequency, BlockingQueue<Message> receivedQueue, BlockingQueue<Message> sendingQueue, int id) {
 		this.receivedQueue = receivedQueue;
 		this.sendingQueue = sendingQueue;
+		this.nodeID = id;
 		try {
 			sock = SocketChannel.open();
 			sock.connect(new InetSocketAddress(server_ip, server_port));
@@ -83,6 +87,101 @@ public class Client {
 				}
 			}
 		}
+
+		public byte[] createHeader(int dest, boolean syn, boolean ack, boolean frag, boolean DM, int seq,
+		                           int dataLen, int nxtHop, int fragNum) {
+			byte[] output = new byte[3];
+			String firstByte = createFirstHeaderByte(dest, syn, ack, frag, DM);
+			output[0] = setByte(firstByte);
+			String secondByte = createSecondHeaderByte(seq, dataLen);
+			output[1] = setByte(secondByte);
+			String thirdByte = createThirdHeaderByte(dataLen, nxtHop, fragNum);
+			output[2] = setByte(thirdByte);
+			return output;
+		}
+
+		public String createFirstHeaderByte(int dest, boolean syn, boolean ack, boolean frag, boolean DM) {
+			String firstByte = "";
+			boolean[] flags = {syn, ack, frag, DM};
+			firstByte += padString(Integer.toBinaryString(nodeID), 2);
+			firstByte += padString(Integer.toBinaryString(dest), 2);
+			for (boolean flag : flags) {
+				firstByte += flag ? "1" : "0";
+			}
+			return firstByte;
+		}
+
+		public String createSecondHeaderByte(int seq, int dataLen) {
+			String output = "";
+			output += padString(Integer.toBinaryString(seq), 5);
+			String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
+			output += dataLenString.substring(0, 3);
+			return output;
+		}
+
+		public String createThirdHeaderByte(int dataLen, int nxtHop, int fragNum) {
+			String output = "";
+			String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
+			output += dataLenString.substring(3);
+			output += padString(Integer.toBinaryString(nxtHop), 2);
+			output += padString(Integer.toBinaryString(fragNum), 4);
+			return output;
+		}
+
+		public String padString(String input, int length) {
+			while (input.length() < length) {
+				input = "0" + input;
+			}
+			return input;
+		}
+
+		public byte setBit(byte input, int pos, boolean set) {
+			if (set) {
+				return (byte) (input | (1 << (8 - pos)));
+			} else {
+				return (byte) (input & ~(1 << (8 - pos)));
+			}
+		}
+		public byte setBit(byte input, int pos) {
+			return setBit(input, pos, true);
+		}
+
+		public boolean isSet(byte input, int pos) {
+			int mask = 1 << (8 - pos);
+			return (input & mask) == mask;
+		}
+
+		public byte setByte(String set) {
+		byte count = 0;
+        for(int i = 0; i < set.length(); i++) {
+            count += Character.getNumericValue(set.charAt(i)) * Math.pow(2, set.length() - (i+1));
+        }
+        return count;
+		}
+
+		public String bytesToString(byte[] input, boolean addZeroes) {
+        String string = "";
+        for (byte b : input) {
+            BitSet bitset = BitSet.valueOf(new byte[]{b});
+            int start;
+
+            if (addZeroes) {
+                start = 7;
+            } else {
+                start = bitset.length() - 1;
+            }
+
+            for (int i = start; i >= 0; i--) {
+                string += bitset.get(i) ? 1 : 0;
+            }
+            string += " ";
+        }
+        return string;
+    }
+
+	public String bytesToString(byte[] input) {
+			return bytesToString(input, true);
+	}
 
 		public void sendConnect(int frequency) {
 			ByteBuffer buff = ByteBuffer.allocate(4);
