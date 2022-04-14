@@ -1,5 +1,6 @@
+package control;
 
-import client.*;
+import model.MessageHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;

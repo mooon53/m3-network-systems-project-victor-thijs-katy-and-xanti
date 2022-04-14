@@ -1,4 +1,6 @@
-import client.Client;
+package model;
+
+import control.Client;
 
 public class MessageHandler extends Thread {
 	byte[] message;
