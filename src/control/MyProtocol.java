@@ -50,18 +50,16 @@ public class MyProtocol {
             String input;
             while (!br.ready()) {
                 input = br.readLine(); // read input
-                System.out.println(input);
+                //System.out.println(input);
                 byte[] inputBytes = input.getBytes(); // get bytes from input
-                for (byte i : inputBytes) {
-                    System.out.println(i);
-                }
+//                for (byte i : inputBytes) {
+//                    System.out.println(i);
+//                }
 
                 byte[] packet = new byte[32];
-                System.out.println(input.length());
                 byte[] header = Client.createHeader(0, false, false, false, false, 0,
                         input.length(), 0, 0);
                 System.arraycopy(header, 0, packet, 0, 3);
-                System.out.println(bytesToString(header));
 
                 // data
                 System.arraycopy(inputBytes, 0, packet, 3, inputBytes.length);

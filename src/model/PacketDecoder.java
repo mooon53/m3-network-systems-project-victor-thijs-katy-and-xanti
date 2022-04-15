@@ -39,9 +39,6 @@ public class PacketDecoder implements Runnable {
      * Runs when called decoding a packet.
      */
     public void run() {
-        System.out.print(byteToString(packet[0]));
-        System.out.print(byteToString(packet[1]));
-        System.out.println(byteToString(packet[2]));
         String firstByte = byteToString(packet[0]);
         source = Integer.valueOf(firstByte.substring(0, 2), 2);
         dest = Integer.valueOf(firstByte.substring(2, 4), 2);
@@ -52,14 +49,11 @@ public class PacketDecoder implements Runnable {
         String secondByte = byteToString(packet[1]);
         seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
         String dataLenPart = secondByte.substring(5, 8);
-        System.out.println("datalenpart " + dataLenPart);
         String thirdByte = byteToString(packet[2]);
         dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
-        System.out.println("datalen bits " + thirdByte.substring(0, 2) + dataLenPart);
         nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
         fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
         byte[] messageBytes = new byte[dataLen];
-        System.out.println("datalength " + dataLen);
         System.arraycopy(packet, 3, messageBytes, 0, dataLen);
         message = new String(messageBytes, StandardCharsets.UTF_8);
         handlePackage();
@@ -69,7 +63,6 @@ public class PacketDecoder implements Runnable {
      * Handles a packet according to the information in the header.
      */
     private void handlePackage() {
-        //System.out.println("test");
         FragHandler fragHandler = new FragHandler();
         if (fragHandlerExists(seqNum)) {
             fragHandler = getFragHandler(seqNum);
