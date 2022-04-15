@@ -1,11 +1,15 @@
 package control;
 
+import utils.HelpFunc;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.BitSet;
 import java.util.concurrent.BlockingQueue;
+
+import static utils.HelpFunc.setByte;
+import static utils.HelpFunc.padString;
 
 
 public class Client {
@@ -57,66 +61,6 @@ public class Client {
 
     public boolean isConnected() {
         return sock.isConnected();
-    }
-
-    public String padString(String input, int length) {
-        while (input.length() < length) {
-            input = "0" + input;
-        }
-        return input;
-    }
-
-    public byte setBit(byte input, int pos, boolean set) {
-        if (set) {
-            return (byte) (input | (1 << (8 - pos)));
-        } else {
-            return (byte) (input & ~(1 << (8 - pos)));
-        }
-    }
-
-    public byte setBit(byte input, int pos) {
-        return setBit(input, pos, true);
-    }
-
-    public boolean isSet(byte input, int pos) {
-        int mask = 1 << (8 - pos);
-        return (input & mask) == mask;
-    }
-
-    public byte setByte(String set) {
-        byte count = 0;
-        for (int i = 0; i < set.length(); i++) {
-            count += Character.getNumericValue(set.charAt(i)) * Math.pow(2, set.length() - (i + 1));
-        }
-        return count;
-    }
-
-    public static String bytesToString(byte[] input, boolean addZeroes) {
-        String string = "";
-        for (byte b : input) {
-            BitSet bitset = BitSet.valueOf(new byte[]{b});
-            int start;
-
-            if (addZeroes) {
-                start = 7;
-            } else {
-                start = bitset.length() - 1;
-            }
-
-            for (int i = start; i >= 0; i--) {
-                string += bitset.get(i) ? 1 : 0;
-            }
-            string += " ";
-        }
-        return string;
-    }
-
-    public static String bytesToString(byte[] input) {
-        return bytesToString(input, true);
-    }
-
-    public static String bytesToString(byte input) {
-        return bytesToString(new byte[]{input}, true);
     }
 
     private class Sender extends Thread {
