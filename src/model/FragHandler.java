@@ -40,9 +40,12 @@ public class FragHandler implements Runnable{
 		UI.printMessage(fullMessage);
 	}
 
-	public void addMessage(int fragID, String fragment, boolean last) {
+	public void addFragment(int fragID, String fragment) {
 		fragments.put(fragID, fragment);
-		if (last) complete = true;
+	}
+
+	public void addFragment(Fragment fragment) {
+		addFragment(fragment.getFragID(), fragment.getMessagePart());
 	}
 
 	@SuppressWarnings("InvisibleCharacter")
