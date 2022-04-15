@@ -1,6 +1,6 @@
 # Default ignored files
-.idea/
+/.idea/
 .DS_Store
 .icloud
-out/
+/out/
 checkstyle-ss-2020.xml

@@ -13,6 +13,8 @@ public class Test {
 		byte test2 = test.getBytes(StandardCharsets.UTF_8)[0];
 		boolean bool = test.endsWith("");
 		System.out.println(bool);
+		test ="";
+		System.out.println(test.endsWith(""));
 
 		System.out.println(bytesToString(new byte[]{0x00, 0x01}, false));
 	}
