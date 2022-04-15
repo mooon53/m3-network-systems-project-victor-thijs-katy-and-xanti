@@ -2,17 +2,23 @@ package control;
 
 public class Fragment {
 	int sourceID;
+	int seqNum;
 	int fragID;
 	String messagePart;
 
-	public Fragment(int sourceID, int fragID, String message) {
+	public Fragment(int sourceID, int seqNum, int fragID, String message) {
 		this.sourceID = sourceID;
+		this.seqNum = seqNum;
 		this.fragID = fragID;
 		this.messagePart = message;
 	}
 
 	public int getSourceID() {
 		return sourceID;
+	}
+
+	public int getSeqNum() {
+		return seqNum;
 	}
 
 	public int getFragID() {

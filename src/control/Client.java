@@ -6,9 +6,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import static utils.HelpFunc.*;
+import model.*;
 
 
 public class Client {
@@ -20,6 +24,20 @@ public class Client {
     private BlockingQueue<Packet> sendingQueue;
 
     private int nodeID;
+
+    private static HashMap<Integer, FragHandler> receivedMessages = new HashMap();
+
+    public static FragHandler getFragHandler(int seqNum) {
+        return receivedMessages.get(seqNum);
+    }
+
+    public static boolean fragHandlerExists(int seqNum) {
+        return receivedMessages.containsKey(seqNum);
+    }
+
+    public static void addFragHandler(int seqNum, FragHandler fragHandler) {
+        receivedMessages.put(seqNum, fragHandler);
+    }
 
     public int getNodeID() {
         return nodeID;

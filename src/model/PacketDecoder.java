@@ -1,8 +1,10 @@
 package model;
 
-import control.Fragment;
+import control.*;
+import view.UI;
 
 import static utils.HelpFunc.*;
+import static control.Client.*;
 
 public class PacketDecoder implements Runnable{
 	byte[] packet;
@@ -37,9 +39,19 @@ public class PacketDecoder implements Runnable{
 		dataLen = Integer.valueOf(thirdByte.substring(0,2)+dataLenPart, 2);
 		nxtHop = Integer.valueOf(thirdByte.substring(2,4), 2);
 		fragNum = Integer.valueOf(thirdByte.substring(4,8), 2);
-		if(frag) {
-			Fragment fragment = new Fragment(source, fragNum, message);
-			Thread fragHandler = new Thread(new FragHandler(fragment));
+		if (!ack) {
+			Fragment fragment = new Fragment(source, seqNum, fragNum, message);
+			if (frag && !fragHandlerExists(seqNum)) {
+				FragHandler fragHandler = new FragHandler(fragment);
+				Thread fragHandlerThread = new Thread(fragHandler);
+				fragHandlerThread.start();
+				addFragHandler(seqNum, fragHandler);
+			} else if (frag) {
+				getFragHandler(seqNum).addFragment(fragment);
+			} else {
+				Message fullMessage = new Message(source, message);
+				UI.printMessage(fullMessage);
+			}
 		}
 	}
 }

@@ -10,17 +10,19 @@ import static java.util.Collections.max;
 
 public class FragHandler implements Runnable{
 	private int sourceID;
+	private int seqNum;
 	private HashMap<Integer, String> fragments;
 	private boolean complete;
 
-	public FragHandler(int sourceID, int fragID, String fragment) {
+	public FragHandler(int sourceID, int seqNum, int fragID, String fragment) {
 		this.sourceID = sourceID;
+		this.seqNum = seqNum;
 		fragments = new HashMap<>();
 		fragments.put(fragID, fragment);
 	}
 
 	public FragHandler(Fragment fragment) {
-		new FragHandler(fragment.getSourceID(), fragment.getFragID(), fragment.getMessagePart());
+		new FragHandler(fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID(), fragment.getMessagePart());
 	}
 
 	public void run() {
