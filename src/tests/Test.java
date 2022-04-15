@@ -1,9 +1,10 @@
-import control.Client;
+package tests;
+
 
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
-import java.util.HashMap;
 
+@SuppressWarnings("InvisibleCharacter")
 public class Test {
 	public static void main(String[] args) {
 		byte b = 0x03;

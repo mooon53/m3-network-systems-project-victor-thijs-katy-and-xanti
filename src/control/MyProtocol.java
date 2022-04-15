@@ -145,11 +145,6 @@ public class MyProtocol {
                             System.out.print("[DATA_SHORT]: ");
                             //Just print the data
                             printByteBuffer(m.getData(), m.getData().capacity());
-                            try {
-
-                            } catch (IllegalArgumentException e) {
-                                System.out.println(";");
-                            }
                             break;
                         case DONE_SENDING:
                             System.out.println("[DONE_SENDING]");
