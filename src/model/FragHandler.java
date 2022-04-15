@@ -11,19 +11,20 @@ import static java.util.Collections.max;
 public class FragHandler implements Runnable{
 	private int sourceID;
 	private int seqNum;
-	private HashMap<Integer, String> fragments;
+	private HashMap<Integer, String> fragments = new HashMap<>();
 	private boolean complete;
 
 	public FragHandler(int sourceID, int seqNum, int fragID, String fragment) {
 		this.sourceID = sourceID;
 		this.seqNum = seqNum;
-		fragments = new HashMap<>();
 		fragments.put(fragID, fragment);
 	}
 
 	public FragHandler(Fragment fragment) {
 		new FragHandler(fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID(), fragment.getMessagePart());
 	}
+
+	public FragHandler() {}
 
 	public void run() {
 		while (!isComplete()) {
@@ -48,6 +49,10 @@ public class FragHandler implements Runnable{
 
 	public void addFragment(Fragment fragment) {
 		addFragment(fragment.getFragID(), fragment.getMessagePart());
+	}
+
+	public boolean hasFragment(int fragID) {
+		return fragments.containsKey(fragID);
 	}
 
 	@SuppressWarnings("InvisibleCharacter")

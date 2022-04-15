@@ -9,6 +9,9 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static control.Client.*;
+import static utils.HelpFunc.*;
+
 /**
  * This is just some example code to show you how to interact
  * with the server using the provided 'Client' class and two queues.
@@ -22,16 +25,16 @@ public class MyProtocol {
     // The port to connect to. 8954 for the simulation server.
     private static final int SERVER_PORT = 8954;
     // The frequency to use.
-    private static int frequency = 500 + 9 * 100;//TODO: Set this to your group frequency!
+    private static int frequency = 500 + 9 * 100;
+
+    BlockingQueue<Packet> receivedQueue = new LinkedBlockingQueue<>();
+    static BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
 
     private final Client client;
     private int nodeID;
     private int sequenceNumber;
 
     public MyProtocol(String server_ip, int server_port, int frequency) {
-        BlockingQueue<Packet> receivedQueue = new LinkedBlockingQueue<>();
-        BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
-
         client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID); // Give the client the Queues to use
 
         new receiveThread(receivedQueue).start(); // Start thread to handle received messages!
@@ -49,49 +52,16 @@ public class MyProtocol {
                 }
 
                 byte[] packet = new byte[32];
-
-                /* // source node, destination node & syn-flag
-                packet[0] = bitsetToByte(concatBitSet(
-                        new BitSet[]{
-                                bytesToBitSet(new byte[]{(byte) nodeID}),
-                                new BitSet(2), //TODO: destination node
-                                new BitSet(1), //TODO: syn-flag
-                                new BitSet(1), //TODO: ack-flag
-                                new BitSet(1), //TODO: frag-flag
-                                new BitSet(1)  //TODO: DM-flag
-                        }));
-
-                // sequence number & data length pt.1
-                packet[1] = bitsetToByte(concatBitSet(
-                        new BitSet[]{
-                                bytesToBitSet(new byte[]{(byte) sequenceNumber}),
-                                new BitSet(2), //TODO: destination node
-                                new BitSet(1), //TODO: syn-flag
-                                new BitSet(1), //TODO: ack-flag
-                                new BitSet(1), //TODO: frag-flag
-                                new BitSet(1)  //TODO: DM-flag
-                        }));
-
-                // syn, next-hop, fragmentation-flag & fragmentation-number
-                packet[2] = bitsetToByte(concatBitSet(new BitSet[]{new BitSet(1), //TODO: syn
-                        bytesToBitSet(new byte[]{(byte) nodeID}), //TODO: next-hop
-                        new BitSet(1), //TODO: fragmentation-flag
-                        new BitSet(4)}) //TODO: fragmentation-number
-                );
-
-                // error detection (ignoring the second and third byte)
-                packet[3] = xorCheck(new Message(
-                        MessageType.DATA,
-                        ByteBuffer.wrap(concatByteArrays(new byte[]{packet[0]},
-                                concatByteArrays(new byte[]{packet[1]}, inputBytes)))));
-
-                */
+                System.out.println(input.length());
+                byte[] header = Client.createHeader(0, false, false, false, false, 0, input.length(), 0, 0);
+                System.arraycopy(header, 0, packet, 0, 3);
+                System.out.println(bytesToString(header));
 
                 // data
-                System.arraycopy(inputBytes, 0, packet, 4, inputBytes.length);
+                System.arraycopy(inputBytes, 0, packet, 3, inputBytes.length);
 
-                ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
-                toSend.put(inputBytes, 0, inputBytes.length); // copy the input string into the byte buffer.
+                ByteBuffer toSend = ByteBuffer.allocate(packet.length); // make a new byte buffer with the length of the input string
+                toSend.put(packet, 0, packet.length); // copy the input string into the byte buffer.
                 Packet msg;
                 //TODO: send the setup and find index using SYN
 
@@ -112,6 +82,14 @@ public class MyProtocol {
             frequency = Integer.parseInt(args[0]);
         }
         new MyProtocol(SERVER_IP, SERVER_PORT, frequency);
+    }
+
+    public static void sendMessage(Packet message) {
+        try {
+            sendingQueue.put(message);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private class receiveThread extends Thread {
@@ -143,6 +121,7 @@ public class MyProtocol {
                             break;
                         case DATA:
                             Thread messageHandler = new Thread(new PacketDecoder(m.getData().array()));
+                            messageHandler.start();
                             break;
                         case DATA_SHORT:
                             System.out.print("[DATA_SHORT]: ");

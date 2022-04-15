@@ -12,307 +12,308 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import static utils.HelpFunc.*;
+
 import model.*;
 
 
 public class Client {
-    private SocketChannel sock;
-    private Sender sender;
-    private Listener listener;
+	private SocketChannel sock;
+	private Sender sender;
+	private Listener listener;
 
-    private BlockingQueue<Packet> receivedQueue;
-    private BlockingQueue<Packet> sendingQueue;
+	private BlockingQueue<Packet> receivedQueue;
+	private BlockingQueue<Packet> sendingQueue;
 
-    private int nodeID;
+	private static int nodeID = 3;
 
-    private static HashMap<Integer, FragHandler> receivedMessages = new HashMap();
+	private static HashMap<Integer, FragHandler> receivedMessages = new HashMap();
 
-    public static FragHandler getFragHandler(int seqNum) {
-        return receivedMessages.get(seqNum);
-    }
+	public static FragHandler getFragHandler(int seqNum) {
+		return receivedMessages.get(seqNum);
+	}
 
-    public static boolean fragHandlerExists(int seqNum) {
-        return receivedMessages.containsKey(seqNum);
-    }
+	public static boolean fragHandlerExists(int seqNum) {
+		return receivedMessages.containsKey(seqNum);
+	}
 
-    public static void addFragHandler(int seqNum, FragHandler fragHandler) {
-        receivedMessages.put(seqNum, fragHandler);
-    }
+	public static void addFragHandler(int seqNum, FragHandler fragHandler) {
+		receivedMessages.put(seqNum, fragHandler);
+	}
 
-    public int getNodeID() {
-        return nodeID;
-    }
+	public int getNodeID() {
+		return nodeID;
+	}
 
-    public void setNodeID(int nodeID) {
-        this.nodeID = nodeID;
-    }
+	public void setNodeID(int nodeID) {
+		this.nodeID = nodeID;
+	}
 
-    public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-        System.out.print("DATA: ");
-        for (int i = 0; i < bytesLength; i++) {
-            System.out.print(bytes.get(i) + " ");
-        }
-        System.out.println();
-    }
+	public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
+		System.out.print("DATA: ");
+		for (int i = 0; i < bytesLength; i++) {
+			System.out.print(bytes.get(i) + " ");
+		}
+		System.out.println();
+	}
 
-    public Client(String server_ip, int server_port, int frequency, BlockingQueue<Packet> receivedQueue, BlockingQueue<Packet> sendingQueue, int id) {
-        this.receivedQueue = receivedQueue;
-        this.sendingQueue = sendingQueue;
-        this.nodeID = id;
-        try {
-            sock = SocketChannel.open();
-            sock.connect(new InetSocketAddress(server_ip, server_port));
-            listener = new Listener(sock, receivedQueue);
-            sender = new Sender(sock, sendingQueue);
-            //dont worry, be happy (c)Thijs
+	public static byte[] createHeader(int dest, boolean syn, boolean ack, boolean frag, boolean DM, int seq,
+		                           int dataLen, int nxtHop, int fragNum) {
+			byte[] output = new byte[3];
+			String firstByte = createFirstHeaderByte(dest, syn, ack, frag, DM);
+			output[0] = setByte(firstByte);
+			String secondByte = createSecondHeaderByte(seq, dataLen);
+			output[1] = setByte(secondByte);
+			String thirdByte = createThirdHeaderByte(dataLen, nxtHop, fragNum);
+			output[2] = setByte(thirdByte);
+			return output;
+		}
 
-            sender.sendConnect(frequency);
+		public static String createFirstHeaderByte(int dest, boolean syn, boolean ack, boolean frag, boolean DM) {
+			String firstByte = "";
+			boolean[] flags = {syn, ack, frag, DM};
+			firstByte += padString(Integer.toBinaryString(nodeID), 2);
+			firstByte += padString(Integer.toBinaryString(dest), 2);
+			for (boolean flag : flags) {
+				firstByte += flag ? "1" : "0";
+			}
+			return firstByte;
+		}
 
-            listener.start();
-            sender.start();
-        } catch (IOException e) {
-            System.err.println("Failed to connect: " + e);
-            System.exit(1);
-        }
-    }
+		public static String createSecondHeaderByte(int seq, int dataLen) {
+			String output = "";
+			output += padString(Integer.toBinaryString(seq), 5);
+			String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
+			output += dataLenString.substring(0, 3);
+			return output;
+		}
 
-    public boolean isConnected() {
-        return sock.isConnected();
-    }
+		public static String createThirdHeaderByte(int dataLen, int nxtHop, int fragNum) {
+			String output = "";
+			String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
+			output += dataLenString.substring(3);
+			output += padString(Integer.toBinaryString(nxtHop), 2);
+			output += padString(Integer.toBinaryString(fragNum), 4);
+			return output;
+		}
 
-    private class Sender extends Thread {
-        private BlockingQueue<Packet> sendingQueue;
-        private SocketChannel sock;
+	public Client(String server_ip, int server_port, int frequency, BlockingQueue<Packet> receivedQueue, BlockingQueue<Packet> sendingQueue, int id) {
+		this.receivedQueue = receivedQueue;
+		this.sendingQueue = sendingQueue;
+		this.nodeID = id;
+		try {
+			sock = SocketChannel.open();
+			sock.connect(new InetSocketAddress(server_ip, server_port));
+			listener = new Listener(sock, receivedQueue);
+			sender = new Sender(sock, sendingQueue);
+			//dont worry, be happy (c)Thijs
 
-        public Sender(SocketChannel sock, BlockingQueue<Packet> sendingQueue) {
-            super();
-            this.sendingQueue = sendingQueue;
-            this.sock = sock;
-        }
+			sender.sendConnect(frequency);
 
-        private void senderLoop() {
-            while (sock.isConnected()) {
-                try {
-                    Packet msg = sendingQueue.take();
-                    if (msg.getType() == PacketType.DATA || msg.getType() == PacketType.DATA_SHORT) {
-                        ByteBuffer data = msg.getData();
-                        data.position(0); //reset position just to be sure
-                        int length = data.capacity(); //assume capacity is also what we want to send here!
-                        ByteBuffer toSend = ByteBuffer.allocate(length + 2);
-                        if (msg.getType() == PacketType.SETUP) {
-                            toSend.put((byte) 10);
-                        } else if (msg.getType() == PacketType.DATA) {
-                            toSend.put((byte) 3);
-                        } else { // must be DATA_SHORT due to check above
-                            toSend.put((byte) 6);
-                        }
-                        toSend.put((byte) length);
-                        toSend.put(data);
-                        toSend.position(0);
-                        // System.out.println("Sending "+Integer.toString(length)+" bytes!");
-                        sock.write(toSend);
-                    }
-                } catch (IOException e) {
-                    System.err.println("Alles is stuk!");
-                } catch (InterruptedException e) {
-                    System.err.println("Failed to take from sendingQueue: " + e);
-                }
-            }
-        }
+			listener.start();
+			sender.start();
+		} catch (IOException e) {
+			System.err.println("Failed to connect: " + e);
+			System.exit(1);
+		}
+	}
 
-        public byte[] createHeader(int dest, boolean syn, boolean ack, boolean frag, boolean DM, int seq,
-                                   int dataLen, int nxtHop, int fragNum) {
-            byte[] output = new byte[3];
-            String firstByte = createFirstHeaderByte(dest, syn, ack, frag, DM);
-            output[0] = setByte(firstByte);
-            String secondByte = createSecondHeaderByte(seq, dataLen);
-            output[1] = setByte(secondByte);
-            String thirdByte = createThirdHeaderByte(dataLen, nxtHop, fragNum);
-            output[2] = setByte(thirdByte);
-            return output;
-        }
+	public boolean isConnected() {
+		return sock.isConnected();
+	}
 
-        public String createFirstHeaderByte(int dest, boolean syn, boolean ack, boolean frag, boolean DM) {
-            String firstByte = "";
-            boolean[] flags = {syn, ack, frag, DM};
-            firstByte += padString(Integer.toBinaryString(nodeID), 2);
-            firstByte += padString(Integer.toBinaryString(dest), 2);
-            for (boolean flag : flags) {
-                firstByte += flag ? "1" : "0";
-            }
-            return firstByte;
-        }
+	private class Sender extends Thread {
+		private BlockingQueue<Packet> sendingQueue;
+		private SocketChannel sock;
 
-        public String createSecondHeaderByte(int seq, int dataLen) {
-            String output = "";
-            output += padString(Integer.toBinaryString(seq), 5);
-            String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
-            output += dataLenString.substring(0, 3);
-            return output;
-        }
+		public Sender(SocketChannel sock, BlockingQueue<Packet> sendingQueue) {
+			super();
+			this.sendingQueue = sendingQueue;
+			this.sock = sock;
+		}
 
-        public String createThirdHeaderByte(int dataLen, int nxtHop, int fragNum) {
-            String output = "";
-            String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
-            output += dataLenString.substring(3);
-            output += padString(Integer.toBinaryString(nxtHop), 2);
-            output += padString(Integer.toBinaryString(fragNum), 4);
-            return output;
-        }
+		private void senderLoop() {
+			while (sock.isConnected()) {
+				try {
+					Packet msg = sendingQueue.take();
+					if (msg.getType() == PacketType.DATA || msg.getType() == PacketType.DATA_SHORT) {
+						ByteBuffer data = msg.getData();
+						data.position(0); //reset position just to be sure
+						int length = data.capacity(); //assume capacity is also what we want to send here!
+						ByteBuffer toSend = ByteBuffer.allocate(length + 2);
+						if (msg.getType() == PacketType.SETUP) {
+							toSend.put((byte) 10);
+						} else if (msg.getType() == PacketType.DATA) {
+							toSend.put((byte) 3);
+						} else { // must be DATA_SHORT due to check above
+							toSend.put((byte) 6);
+						}
+						toSend.put((byte) length);
+						toSend.put(data);
+						toSend.position(0);
+						// System.out.println("Sending "+Integer.toString(length)+" bytes!");
+						sock.write(toSend);
+					}
+				} catch (IOException e) {
+					System.err.println("Alles is stuk!");
+				} catch (InterruptedException e) {
+					System.err.println("Failed to take from sendingQueue: " + e);
+				}
+			}
+		}
 
-        public void sendConnect(int frequency) {
-            ByteBuffer buff = ByteBuffer.allocate(4);
-            buff.put((byte) 9);
-            buff.put((byte) ((frequency >> 16) & 0xff));
-            buff.put((byte) ((frequency >> 8) & 0xff));
-            buff.put((byte) (frequency & 0xff));
-            buff.position(0);
-            try {
-                sock.write(buff);
-            } catch (IOException e) {
-                System.err.println("Failed to send HELLO");
-            }
-        }
+		public void sendConnect(int frequency) {
+			ByteBuffer buff = ByteBuffer.allocate(4);
+			buff.put((byte) 9);
+			buff.put((byte) ((frequency >> 16) & 0xff));
+			buff.put((byte) ((frequency >> 8) & 0xff));
+			buff.put((byte) (frequency & 0xff));
+			buff.position(0);
+			try {
+				sock.write(buff);
+			} catch (IOException e) {
+				System.err.println("Failed to send HELLO");
+			}
+		}
 
-        public void run() {
-            senderLoop();
-        }
+		public void run() {
+			senderLoop();
+		}
 
-    }
+	}
 
 
-    private class Listener extends Thread {
-        private BlockingQueue<Packet> receivedQueue;
-        private SocketChannel sock;
+	private class Listener extends Thread {
+		private BlockingQueue<Packet> receivedQueue;
+		private SocketChannel sock;
 
-        public Listener(SocketChannel sock, BlockingQueue<Packet> receivedQueue) {
-            super();
-            this.receivedQueue = receivedQueue;
-            this.sock = sock;
-        }
+		public Listener(SocketChannel sock, BlockingQueue<Packet> receivedQueue) {
+			super();
+			this.receivedQueue = receivedQueue;
+			this.sock = sock;
+		}
 
-        private ByteBuffer messageBuffer = ByteBuffer.allocate(1024);
-        private int messageLength = -1;
-        private boolean messageReceiving = false;
-        private boolean shortData = false;
-        private boolean setup = false;
+		private ByteBuffer messageBuffer = ByteBuffer.allocate(1024);
+		private int messageLength = -1;
+		private boolean messageReceiving = false;
+		private boolean shortData = false;
+		private boolean setup = false;
 
-        private void parseMessage(ByteBuffer received, int bytesReceived) {
-            // printByteBuffer(received, bytesReceived);
+		private void parseMessage(ByteBuffer received, int bytesReceived) {
+			// printByteBuffer(received, bytesReceived);
 
-            try {
-                for (int offset = 0; offset < bytesReceived; offset++) {
-                    byte d = received.get(offset);
+			try {
+				for (int offset = 0; offset < bytesReceived; offset++) {
+					byte d = received.get(offset);
 
-                    if (messageReceiving) {
-                        if (messageLength == -1) {
-                            messageLength = (int) d;
-                            messageBuffer = ByteBuffer.allocate(messageLength);
-                        } else {
-                            messageBuffer.put(d);
-                        }
-                        if (messageBuffer.position() == messageLength) {
-                            // Return DATA here
-                            // printByteBuffer(messageBuffer, messageLength);
-                            // System.out.println("pos: "+Integer.toString(messageBuffer.position()) );
-                            messageBuffer.position(0);
-                            ByteBuffer temp = ByteBuffer.allocate(messageLength);
-                            temp.put(messageBuffer);
-                            temp.rewind();
-                            //TODO: put SETUP message
-                            if (setup) {
-                                receivedQueue.put(new Packet(PacketType.SETUP, temp));
-                            } else if (shortData) {
-                                receivedQueue.put(new Packet(PacketType.DATA_SHORT, temp));
-                            } else {
-                                receivedQueue.put(new Packet(PacketType.DATA, temp));
-                            }
-                            messageReceiving = false;
-                        }
-                    } else {
-                        switch (d) {
-                            case 0x09:
-                                // System.out.println("CONNECTED");
-                                receivedQueue.put(new Packet(PacketType.HELLO));
-                                break;
-                            case 0x01:
-                                // System.out.println("FREE");
-                                receivedQueue.put(new Packet(PacketType.FREE));
-                                break;
-                            case 0x02:
-                                // System.out.println("BUSY");
-                                receivedQueue.put(new Packet(PacketType.BUSY));
-                                break;
-                            case 0x03:
-                                messageLength = -1;
-                                messageReceiving = true;
-                                shortData = false;
-                                break;
-                            case 0x04:
-                                // System.out.println("SENDING");
-                                receivedQueue.put(new Packet(PacketType.SENDING));
-                                break;
-                            case 0x05:
-                                // System.out.println("DONE_SENDING");
-                                receivedQueue.put(new Packet(PacketType.DONE_SENDING));
-                                break;
-                            case 0x06:
-                                messageLength = -1;
-                                messageReceiving = true;
-                                shortData = true;
-                                break;
-                            case 0x08:
-                                // System.out.println("END");
-                                receivedQueue.put(new Packet(PacketType.END));
-                                break;
-                            case 0x10:
-                                messageLength = -1;
-                                messageReceiving = true;
-                                setup = true;
-                                break;
-                            default:
-                                System.out.println();
-                                break;
-                        }
-                    }
-                }
+					if (messageReceiving) {
+						if (messageLength == -1) {
+							messageLength = (int) d;
+							messageBuffer = ByteBuffer.allocate(messageLength);
+						} else {
+							messageBuffer.put(d);
+						}
+						if (messageBuffer.position() == messageLength) {
+							// Return DATA here
+							// printByteBuffer(messageBuffer, messageLength);
+							// System.out.println("pos: "+Integer.toString(messageBuffer.position()) );
+							messageBuffer.position(0);
+							ByteBuffer temp = ByteBuffer.allocate(messageLength);
+							temp.put(messageBuffer);
+							temp.rewind();
+							//TODO: put SETUP message
+							if (setup) {
+								receivedQueue.put(new Packet(PacketType.SETUP, temp));
+							} else if (shortData) {
+								receivedQueue.put(new Packet(PacketType.DATA_SHORT, temp));
+							} else {
+								receivedQueue.put(new Packet(PacketType.DATA, temp));
+							}
+							messageReceiving = false;
+						}
+					} else {
+						switch (d) {
+							case 0x09:
+								// System.out.println("CONNECTED");
+								receivedQueue.put(new Packet(PacketType.HELLO));
+								break;
+							case 0x01:
+								// System.out.println("FREE");
+								receivedQueue.put(new Packet(PacketType.FREE));
+								break;
+							case 0x02:
+								// System.out.println("BUSY");
+								receivedQueue.put(new Packet(PacketType.BUSY));
+								break;
+							case 0x03:
+								messageLength = -1;
+								messageReceiving = true;
+								shortData = false;
+								break;
+							case 0x04:
+								// System.out.println("SENDING");
+								receivedQueue.put(new Packet(PacketType.SENDING));
+								break;
+							case 0x05:
+								// System.out.println("DONE_SENDING");
+								receivedQueue.put(new Packet(PacketType.DONE_SENDING));
+								break;
+							case 0x06:
+								messageLength = -1;
+								messageReceiving = true;
+								shortData = true;
+								break;
+							case 0x08:
+								// System.out.println("END");
+								receivedQueue.put(new Packet(PacketType.END));
+								break;
+							case 0x10:
+								messageLength = -1;
+								messageReceiving = true;
+								setup = true;
+								break;
+							default:
+								System.out.println();
+								break;
+						}
+					}
+				}
 
-            } catch (InterruptedException e) {
-                System.err.println("Failed to put data in receivedQueue: " + e.toString());
-            }
-        }
+			} catch (InterruptedException e) {
+				System.err.println("Failed to put data in receivedQueue: " + e.toString());
+			}
+		}
 
-        public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-            System.out.print("DATA: ");
-            for (int i = 0; i < bytesLength; i++) {
-                System.out.print(bytes.get(i) + " ");
-            }
-            System.out.println();
-        }
+		public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
+			System.out.print("DATA: ");
+			for (int i = 0; i < bytesLength; i++) {
+				System.out.print(bytes.get(i) + " ");
+			}
+			System.out.println();
+		}
 
-        public void receivingLoop() {
-            int bytesRead = 0;
-            ByteBuffer recv = ByteBuffer.allocate(1024);
-            try {
-                while (sock.isConnected()) {
-                    bytesRead = sock.read(recv);
-                    if (bytesRead > 0) {
-                        // System.out.println("Received "+Integer.toString(bytesRead)+" bytes!");
-                        parseMessage(recv, bytesRead);
-                    } else {
-                        break;
-                    }
-                    recv.clear();
-                }
-            } catch (IOException e) {
-                System.err.println("Error on socket: " + e);
-            }
+		public void receivingLoop() {
+			int bytesRead = 0;
+			ByteBuffer recv = ByteBuffer.allocate(1024);
+			try {
+				while (sock.isConnected()) {
+					bytesRead = sock.read(recv);
+					if (bytesRead > 0) {
+						// System.out.println("Received "+Integer.toString(bytesRead)+" bytes!");
+						parseMessage(recv, bytesRead);
+					} else {
+						break;
+					}
+					recv.clear();
+				}
+			} catch (IOException e) {
+				System.err.println("Error on socket: " + e);
+			}
 
-        }
+		}
 
-        public void run() {
-            receivingLoop();
-        }
+		public void run() {
+			receivingLoop();
+		}
 
-    }
+	}
 }
