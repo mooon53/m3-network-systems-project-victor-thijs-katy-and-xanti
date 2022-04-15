@@ -2,4 +2,5 @@
 .idea/
 .DS_Store
 .icloud
-out/upd
+out/
+checkstyle-ss-2020.xml
