@@ -8,8 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 
-import static utils.HelpFunc.setByte;
-import static utils.HelpFunc.padString;
+import static utils.HelpFunc.*;
 
 
 public class Client {
