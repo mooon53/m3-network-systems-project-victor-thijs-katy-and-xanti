@@ -1,6 +1,6 @@
 package control;
 
-import model.PacketHandler;
+import model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -142,7 +142,7 @@ public class MyProtocol {
                             System.out.println("[FREE]");
                             break;
                         case DATA:
-                            Thread messageHandler = new Thread(new PacketHandler(m.getData().array()));
+                            Thread messageHandler = new Thread(new PacketDecoder(m.getData().array()));
                             break;
                         case DATA_SHORT:
                             System.out.print("[DATA_SHORT]: ");

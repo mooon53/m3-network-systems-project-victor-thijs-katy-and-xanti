@@ -2,7 +2,7 @@ package model;
 
 import static utils.HelpFunc.*;
 
-public class PacketDecoder {
+public class PacketDecoder implements Runnable{
 	byte[] packet;
 	int source;
 	int dest;
