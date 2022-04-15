@@ -1,12 +1,11 @@
 package control;
 
-import model.MessageHandler;
+import model.PacketHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -30,8 +29,8 @@ public class MyProtocol {
     private int sequenceNumber;
 
     public MyProtocol(String server_ip, int server_port, int frequency) {
-        BlockingQueue<Message> receivedQueue = new LinkedBlockingQueue<>();
-        BlockingQueue<Message> sendingQueue = new LinkedBlockingQueue<>();
+        BlockingQueue<Packet> receivedQueue = new LinkedBlockingQueue<>();
+        BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
 
         client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID); // Give the client the Queues to use
 
@@ -93,13 +92,13 @@ public class MyProtocol {
 
                 ByteBuffer toSend = ByteBuffer.allocate(inputBytes.length); // make a new byte buffer with the length of the input string
                 toSend.put(inputBytes, 0, inputBytes.length); // copy the input string into the byte buffer.
-                Message msg;
+                Packet msg;
                 //TODO: send the setup and find index using SYN
 
                 if ((input.length()) > 2) {
-                    msg = new Message(MessageType.DATA, toSend);
+                    msg = new Packet(PacketType.DATA, toSend);
                 } else {
-                    msg = new Message(MessageType.DATA_SHORT, toSend);
+                    msg = new Packet(PacketType.DATA_SHORT, toSend);
                 }
                 sendingQueue.put(msg);
             }
@@ -115,58 +114,10 @@ public class MyProtocol {
         new MyProtocol(SERVER_IP, SERVER_PORT, frequency);
     }
 
-    public byte bitsetToByte(BitSet bitset) {
-        if (bitset.length() > 8) return 0;
-        return bitset.toByteArray()[0];
-    }
-
-    public BitSet bytesToBitSet(byte[] input) {
-        return BitSet.valueOf(input);
-    }
-
-    public byte xorCheck(Message message) {
-        byte[] bytes = message.getData().array();
-        if (bytes.length >= 2) {
-            byte xoredByte = bytes[0];
-            for (int i = 1; i < bytes.length; i++) {
-                xoredByte = (byte) (xoredByte ^ bytes[i]);
-            }
-            return xoredByte;
-        } else if (bytes.length == 1) {
-            return bytes[0];
-        } else {
-            return 0;
-        }
-    }
-
-    public byte[] concatByteArrays(byte[] array1, byte[] array2) {
-        byte[] result = new byte[array1.length + array2.length];
-        System.arraycopy(array1, 0, result, 0, array1.length);
-        System.arraycopy(array2, 0, result, array1.length, array2.length);
-
-        return result;
-    }
-
-    public BitSet concatBitSet(BitSet[] bitsets) {
-        BitSet output = new BitSet();
-        int index = 0;
-        for (int i = 0; i < bitsets.length; i++) {
-            if (i > 0) index += bitsets[i - 1].length();
-            for (int n = 0; n < bitsets[i].length(); i++) {
-                if (bitsets[i].get(n)) output.set(index + n);
-            }
-        }
-        return output;
-    }
-
-    private byte getBit(byte b, int index) {
-        return (byte) ((b >> 7 - index) & 1);
-    }
-
     private class receiveThread extends Thread {
-        private final BlockingQueue<Message> receivedQueue;
+        private final BlockingQueue<Packet> receivedQueue;
 
-        public receiveThread(BlockingQueue<Message> receivedQueue) {
+        public receiveThread(BlockingQueue<Packet> receivedQueue) {
             super();
             this.receivedQueue = receivedQueue;
         }
@@ -182,7 +133,7 @@ public class MyProtocol {
         public void run() {
             while (client.isConnected()) {
                 try {
-                    Message m = receivedQueue.take();
+                    Packet m = receivedQueue.take();
                     switch (m.getType()) {
                         case BUSY:
                             System.out.println("[BUSY]");
@@ -191,7 +142,7 @@ public class MyProtocol {
                             System.out.println("[FREE]");
                             break;
                         case DATA:
-                            Thread messageHandler = new Thread(new MessageHandler(m.getData().array()));
+                            Thread messageHandler = new Thread(new PacketHandler(m.getData().array()));
                             break;
                         case DATA_SHORT:
                             System.out.print("[DATA_SHORT]: ");

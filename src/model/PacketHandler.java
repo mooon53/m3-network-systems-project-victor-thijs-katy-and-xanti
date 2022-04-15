@@ -2,7 +2,7 @@ package model;
 
 import control.Client;
 
-public class MessageHandler extends Thread {
+public class PacketHandler extends Thread {
 	byte[] message;
 	int source;
 	int dest;
@@ -15,10 +15,9 @@ public class MessageHandler extends Thread {
 	int nxtHop;
 	int fragNum;
 
-	public MessageHandler(byte[] message) {
+	public PacketHandler(byte[] message) {
 		this.message = message;
 	}
-
 
 	public void run() {
 		String firstByte = Client.bytesToString(message[0]);

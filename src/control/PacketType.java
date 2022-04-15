@@ -1,6 +1,6 @@
 package control;
 
-public enum MessageType {
+public enum PacketType {
 	FREE,
 	BUSY,
 	DATA,

@@ -13,8 +13,8 @@ public class Client {
     private Sender sender;
     private Listener listener;
 
-    private BlockingQueue<Message> receivedQueue;
-    private BlockingQueue<Message> sendingQueue;
+    private BlockingQueue<Packet> receivedQueue;
+    private BlockingQueue<Packet> sendingQueue;
 
     private int nodeID;
 
@@ -34,7 +34,7 @@ public class Client {
         System.out.println();
     }
 
-    public Client(String server_ip, int server_port, int frequency, BlockingQueue<Message> receivedQueue, BlockingQueue<Message> sendingQueue, int id) {
+    public Client(String server_ip, int server_port, int frequency, BlockingQueue<Packet> receivedQueue, BlockingQueue<Packet> sendingQueue, int id) {
         this.receivedQueue = receivedQueue;
         this.sendingQueue = sendingQueue;
         this.nodeID = id;
@@ -120,10 +120,10 @@ public class Client {
     }
 
     private class Sender extends Thread {
-        private BlockingQueue<Message> sendingQueue;
+        private BlockingQueue<Packet> sendingQueue;
         private SocketChannel sock;
 
-        public Sender(SocketChannel sock, BlockingQueue<Message> sendingQueue) {
+        public Sender(SocketChannel sock, BlockingQueue<Packet> sendingQueue) {
             super();
             this.sendingQueue = sendingQueue;
             this.sock = sock;
@@ -132,15 +132,15 @@ public class Client {
         private void senderLoop() {
             while (sock.isConnected()) {
                 try {
-                    Message msg = sendingQueue.take();
-                    if (msg.getType() == MessageType.DATA || msg.getType() == MessageType.DATA_SHORT) {
+                    Packet msg = sendingQueue.take();
+                    if (msg.getType() == PacketType.DATA || msg.getType() == PacketType.DATA_SHORT) {
                         ByteBuffer data = msg.getData();
                         data.position(0); //reset position just to be sure
                         int length = data.capacity(); //assume capacity is also what we want to send here!
                         ByteBuffer toSend = ByteBuffer.allocate(length + 2);
-                        if (msg.getType() == MessageType.SETUP) {
+                        if (msg.getType() == PacketType.SETUP) {
                             toSend.put((byte) 10);
-                        } else if (msg.getType() == MessageType.DATA) {
+                        } else if (msg.getType() == PacketType.DATA) {
                             toSend.put((byte) 3);
                         } else { // must be DATA_SHORT due to check above
                             toSend.put((byte) 6);
@@ -221,10 +221,10 @@ public class Client {
 
 
     private class Listener extends Thread {
-        private BlockingQueue<Message> receivedQueue;
+        private BlockingQueue<Packet> receivedQueue;
         private SocketChannel sock;
 
-        public Listener(SocketChannel sock, BlockingQueue<Message> receivedQueue) {
+        public Listener(SocketChannel sock, BlockingQueue<Packet> receivedQueue) {
             super();
             this.receivedQueue = receivedQueue;
             this.sock = sock;
@@ -260,11 +260,11 @@ public class Client {
                             temp.rewind();
                             //TODO: put SETUP message
                             if (setup) {
-                                receivedQueue.put(new Message(MessageType.SETUP, temp));
+                                receivedQueue.put(new Packet(PacketType.SETUP, temp));
                             } else if (shortData) {
-                                receivedQueue.put(new Message(MessageType.DATA_SHORT, temp));
+                                receivedQueue.put(new Packet(PacketType.DATA_SHORT, temp));
                             } else {
-                                receivedQueue.put(new Message(MessageType.DATA, temp));
+                                receivedQueue.put(new Packet(PacketType.DATA, temp));
                             }
                             messageReceiving = false;
                         }
@@ -272,15 +272,15 @@ public class Client {
                         switch (d) {
                             case 0x09:
                                 // System.out.println("CONNECTED");
-                                receivedQueue.put(new Message(MessageType.HELLO));
+                                receivedQueue.put(new Packet(PacketType.HELLO));
                                 break;
                             case 0x01:
                                 // System.out.println("FREE");
-                                receivedQueue.put(new Message(MessageType.FREE));
+                                receivedQueue.put(new Packet(PacketType.FREE));
                                 break;
                             case 0x02:
                                 // System.out.println("BUSY");
-                                receivedQueue.put(new Message(MessageType.BUSY));
+                                receivedQueue.put(new Packet(PacketType.BUSY));
                                 break;
                             case 0x03:
                                 messageLength = -1;
@@ -289,11 +289,11 @@ public class Client {
                                 break;
                             case 0x04:
                                 // System.out.println("SENDING");
-                                receivedQueue.put(new Message(MessageType.SENDING));
+                                receivedQueue.put(new Packet(PacketType.SENDING));
                                 break;
                             case 0x05:
                                 // System.out.println("DONE_SENDING");
-                                receivedQueue.put(new Message(MessageType.DONE_SENDING));
+                                receivedQueue.put(new Packet(PacketType.DONE_SENDING));
                                 break;
                             case 0x06:
                                 messageLength = -1;
@@ -302,7 +302,7 @@ public class Client {
                                 break;
                             case 0x08:
                                 // System.out.println("END");
-                                receivedQueue.put(new Message(MessageType.END));
+                                receivedQueue.put(new Packet(PacketType.END));
                                 break;
                             case 0x10:
                                 messageLength = -1;
