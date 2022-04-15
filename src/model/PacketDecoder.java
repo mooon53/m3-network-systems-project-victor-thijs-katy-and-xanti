@@ -1,5 +1,7 @@
 package model;
 
+import control.Fragment;
+
 import static utils.HelpFunc.*;
 
 public class PacketDecoder implements Runnable{
@@ -14,6 +16,7 @@ public class PacketDecoder implements Runnable{
 	int dataLen;
 	int nxtHop;
 	int fragNum;
+	String message;
 
 	public PacketDecoder(byte[] packet) {
 		this.packet = packet;
@@ -34,5 +37,9 @@ public class PacketDecoder implements Runnable{
 		dataLen = Integer.valueOf(thirdByte.substring(0,2)+dataLenPart, 2);
 		nxtHop = Integer.valueOf(thirdByte.substring(2,4), 2);
 		fragNum = Integer.valueOf(thirdByte.substring(4,8), 2);
+		if(frag) {
+			Fragment fragment = new Fragment(source, fragNum, message);
+			Thread fragHandler = new Thread(new FragHandler(fragment));
+		}
 	}
 }
