@@ -2,6 +2,7 @@ import control.Client;
 
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.HashMap;
 
 public class Test {
 	public static void main(String[] args) {
@@ -11,5 +12,27 @@ public class Test {
 		byte test2 = test.getBytes(StandardCharsets.UTF_8)[0];
 		boolean bool = test.endsWith("");
 		System.out.println(bool);
+
+		System.out.println(bytesToString(new byte[]{0x00, 0x01}, false));
+	}
+
+	public static String bytesToString(byte[] input, boolean addZeroes) {
+		StringBuilder string = new StringBuilder();
+		for (byte b : input) {
+			BitSet bitset = BitSet.valueOf(new byte[]{b});
+			int start;
+
+			if (addZeroes) {
+				start = 7;
+			} else {
+				start = bitset.length() - 1;
+			}
+
+			for (int i = start; i >= 0; i--) {
+				string.append(bitset.get(i) ? 1 : 0);
+			}
+			string.append(" ");
+		}
+		return string.toString();
 	}
 }

@@ -9,15 +9,11 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static control.Client.*;
 import static utils.HelpFunc.*;
 
 /**
- * This is just some example code to show you how to interact
- * with the server using the provided 'Client' class and two queues.
- * Feel free to modify this code in any way you like!
+ * The implementation of our protocol.
  */
-
 public class MyProtocol {
 
     // The host to connect to. Set this to localhost when using the audio interface tool.
@@ -34,10 +30,19 @@ public class MyProtocol {
     private int nodeID;
     private int sequenceNumber;
 
-    public MyProtocol(String server_ip, int server_port, int frequency) {
-        client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID); // Give the client the Queues to use
+    /**
+     * Constructor of the protocol, starting a client,
+     * receiving thread, while waiting for text input.
+     *
+     * @param serverIp   IP of the server to connect to
+     * @param serverPort port of the server to connect to
+     * @param frequency  frequency on which the communication should take place
+     */
+    public MyProtocol(String serverIp, int serverPort, int frequency) {
+        // Give the client the Queues to use
+        client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
 
-        new receiveThread(receivedQueue).start(); // Start thread to handle received messages!
+        new ReceiveThread(receivedQueue).start(); // Start thread to handle received messages!
 
         // handle sending from stdin from this thread.
         try {
@@ -53,14 +58,16 @@ public class MyProtocol {
 
                 byte[] packet = new byte[32];
                 System.out.println(input.length());
-                byte[] header = Client.createHeader(0, false, false, false, false, 0, input.length(), 0, 0);
+                byte[] header = Client.createHeader(0, false, false, false, false, 0,
+                        input.length(), 0, 0);
                 System.arraycopy(header, 0, packet, 0, 3);
                 System.out.println(bytesToString(header));
 
                 // data
                 System.arraycopy(inputBytes, 0, packet, 3, inputBytes.length);
 
-                ByteBuffer toSend = ByteBuffer.allocate(packet.length); // make a new byte buffer with the length of the input string
+                // make a new byte buffer with the length of the input string
+                ByteBuffer toSend = ByteBuffer.allocate(packet.length);
                 toSend.put(packet, 0, packet.length); // copy the input string into the byte buffer.
                 Packet msg;
                 //TODO: send the setup and find index using SYN
@@ -77,6 +84,11 @@ public class MyProtocol {
         }
     }
 
+    /**
+     * Main method starting a new MyProtocol.
+     *
+     * @param args wanted frequency as program argument
+     */
     public static void main(String[] args) {
         if (args.length > 0) {
             frequency = Integer.parseInt(args[0]);
@@ -84,30 +96,37 @@ public class MyProtocol {
         new MyProtocol(SERVER_IP, SERVER_PORT, frequency);
     }
 
-    public static void sendMessage(Packet message) {
+    /**
+     * Puts a message in the sendingQueue.
+     *
+     * @param packet packet which needed to be added to the sendingQueue
+     */
+    public static void sendMessage(Packet packet) {
         try {
-            sendingQueue.put(message);
+            sendingQueue.put(packet);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private class receiveThread extends Thread {
+    private class ReceiveThread extends Thread {
         private final BlockingQueue<Packet> receivedQueue;
 
-        public receiveThread(BlockingQueue<Packet> receivedQueue) {
+        /**
+         * Constructor for the receiveThread, setting the receivedQueue.
+         *
+         * @param receivedQueue receivedQueue to which this Thread's queue should be set to
+         */
+        public ReceiveThread(BlockingQueue<Packet> receivedQueue) {
             super();
             this.receivedQueue = receivedQueue;
         }
 
-        public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-            for (int i = 0; i < bytesLength; i++) {
-                System.out.print(bytes.get(i) + " ");
-            }
-            System.out.println();
-        }
-
         // Handle messages from the server / audio framework
+
+        /**
+         * Runs the Thread for receiving messages.
+         */
         public void run() {
             while (client.isConnected()) {
                 try {
@@ -120,12 +139,14 @@ public class MyProtocol {
                             System.out.println("[FREE]");
                             break;
                         case DATA:
-                            Thread messageHandler = new Thread(new PacketDecoder(m.getData().array()));
+                            Thread messageHandler = new Thread(
+                                    new PacketDecoder(m.getData().array()));
                             messageHandler.start();
                             break;
                         case DATA_SHORT:
                             System.out.print("[DATA_SHORT]: ");
-                            printByteBuffer(m.getData(), m.getData().capacity()); //Just print the data
+                            //Just print the data
+                            printByteBuffer(m.getData(), m.getData().capacity());
                             try {
 
                             } catch (IllegalArgumentException e) {
@@ -146,7 +167,7 @@ public class MyProtocol {
                             System.exit(0);
                             break;
                         case SETUP:
-                            System.out.println("[SETUP] your node is: "+ nodeID);
+                            System.out.println("[SETUP] your node is: " + nodeID);
                             break;
                         default:
                             System.out.println();

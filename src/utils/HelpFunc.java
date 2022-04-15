@@ -1,115 +1,195 @@
 package utils;
 
-import control.Packet;
-
+import java.nio.ByteBuffer;
 import java.util.BitSet;
 
+/**
+ * Class containing helper functions needed in other classes.
+ */
 public class HelpFunc {
-	public static byte bitsetToByte(BitSet bitset) {
-		if (bitset.length() > 8) return 0;
-		return bitset.toByteArray()[0];
-	}
+    /**
+     * Prints a given ByteBuffer.
+     *
+     * @param bytes       ByteBuffer which needs to be printed
+     * @param bytesLength length of the ByteBuffer
+     */
+    public static void printByteBuffer(ByteBuffer bytes, int bytesLength) {
+        System.out.print("DATA: ");
+        for (int i = 0; i < bytesLength; i++) {
+            System.out.print(bytes.get(i) + " ");
+        }
+        System.out.println();
+    }
 
-	public static BitSet bytesToBitSet(byte[] input) {
-		return BitSet.valueOf(input);
-	}
+    /**
+     * Takes a bitset and makes it a byte.
+     *
+     * @param bitset bitset that needs to be converted
+     * @return byte corresponding to the given bitset
+     */
+    public static byte bitsetToByte(BitSet bitset) {
+        if (bitset.length() > 8) {
+            return 0;
+        }
+        return bitset.toByteArray()[0];
+    }
 
-	public static byte xorCheck(Packet packet) {
-		byte[] bytes = packet.getData().array();
-		if (bytes.length >= 2) {
-			byte xoredByte = bytes[0];
-			for (int i = 1; i < bytes.length; i++) {
-				xoredByte = (byte) (xoredByte ^ bytes[i]);
-			}
-			return xoredByte;
-		} else if (bytes.length == 1) {
-			return bytes[0];
-		} else {
-			return 0;
-		}
-	}
+    /**
+     * Takes a byte array and makes it a bitset.
+     *
+     * @param input byte array that needs to be converted
+     * @return bitset corresponding to the given byte array
+     */
+    public static BitSet bytesToBitSet(byte[] input) {
+        return BitSet.valueOf(input);
+    }
 
-	public static byte[] concatByteArrays(byte[] array1, byte[] array2) {
-		byte[] result = new byte[array1.length + array2.length];
-		System.arraycopy(array1, 0, result, 0, array1.length);
-		System.arraycopy(array2, 0, result, array1.length, array2.length);
 
-		return result;
-	}
+    /**
+     * Concatenates bitsets to one bitset.
+     *
+     * @param bitsets bitsets that need to be concatenated
+     * @return concatenated bitset
+     */
+    public static BitSet concatBitSet(BitSet[] bitsets) {
+        BitSet output = new BitSet();
+        int index = 0;
+        for (int i = 0; i < bitsets.length; i++) {
+            if (i > 0) {
+                index += bitsets[i - 1].length();
+            }
+            for (int n = 0; n < bitsets[i].length(); n++) {
+                if (bitsets[i].get(n)) {
+                    output.set(index + n);
+                }
+            }
+        }
+        return output;
+    }
 
-	public static BitSet concatBitSet(BitSet[] bitsets) {
-		BitSet output = new BitSet();
-		int index = 0;
-		for (int i = 0; i < bitsets.length; i++) {
-			if (i > 0) index += bitsets[i - 1].length();
-			for (int n = 0; n < bitsets[i].length(); i++) {
-				if (bitsets[i].get(n)) output.set(index + n);
-			}
-		}
-		return output;
-	}
+    /**
+     * Gets the bit of a byte at a certain index.
+     *
+     * @param b     byte in which the bit is located
+     * @param index location of the wanted bit
+     * @return the bit in the byte at the wanted location
+     */
+    public static byte getBit(byte b, int index) {
+        return (byte) ((b >> 7 - index) & 1);
+    }
 
-	public static byte getBit(byte b, int index) {
-		return (byte) ((b >> 7 - index) & 1);
-	}
+    /**
+     * Pads a string with 0's.
+     *
+     * @param input  the input string
+     * @param length amount of 0's wanted to be added
+     * @return the padded string
+     */
+    public static String padString(String input, int length) {
+        StringBuilder inputBuilder = new StringBuilder(input);
+        while (inputBuilder.length() < length) {
+            inputBuilder.insert(0, "0");
+        }
+        return inputBuilder.toString();
+    }
 
-	public static String padString(String input, int length) {
-		while (input.length() < length) {
-			input = "0" + input;
-		}
-		return input;
-	}
+    /**
+     * Sets a certain bit in a byte.
+     *
+     * @param input the byte in which the bit needs to be changed
+     * @param pos   position of the bit that needs to be changed
+     * @param set   value to which the bit should be set
+     * @return resulting byte
+     */
+    public static byte setBit(byte input, int pos, boolean set) {
+        if (set) {
+            return (byte) (input | (1 << (8 - pos)));
+        } else {
+            return (byte) (input & ~(1 << (8 - pos)));
+        }
+    }
 
-	public static byte setBit(byte input, int pos, boolean set) {
-		if (set) {
-			return (byte) (input | (1 << (8 - pos)));
-		} else {
-			return (byte) (input & ~(1 << (8 - pos)));
-		}
-	}
+    /**
+     * Sets a certain bit in a byte to true.
+     *
+     * @param input the byte in which the bit needs to be changed
+     * @param pos   position of the bit that needs to be changed
+     * @return resulting byte
+     */
+    public static byte setBit(byte input, int pos) {
+        return setBit(input, pos, true);
+    }
 
-	public static byte setBit(byte input, int pos) {
-		return setBit(input, pos, true);
-	}
+    /**
+     * Checks if a certain bit in a byte is true.
+     *
+     * @param input byte that needs to be checked
+     * @param pos   position of the bit that needs to be set to true
+     * @return true if the certain bit in the byte is true
+     */
+    public static boolean isSet(byte input, int pos) {
+        int mask = 1 << (8 - pos);
+        return (input & mask) == mask;
+    }
 
-	public static boolean isSet(byte input, int pos) {
-		int mask = 1 << (8 - pos);
-		return (input & mask) == mask;
-	}
+    /**
+     * Turns string into a byte.
+     *
+     * @param set string that needs to be converted
+     * @return byte converted from the string
+     */
+    public static byte stringToByte(String set) {
+        byte count = 0;
+        for (int i = 0; i < set.length(); i++) {
+            count += Character.getNumericValue(set.charAt(i)) * Math.pow(2, set.length() - (i + 1));
+        }
+        return count;
+    }
 
-	public static byte setByte(String set) {
-		byte count = 0;
-		for (int i = 0; i < set.length(); i++) {
-			count += Character.getNumericValue(set.charAt(i)) * Math.pow(2, set.length() - (i + 1));
-		}
-		return count;
-	}
+    /**
+     * Turns a byte array to a string.
+     *
+     * @param input     byte array that needs to be converted
+     * @param addZeroes whether zeroes should be added to make 8 bit long bytes
+     * @return string converted from the byte array
+     */
+    public static String bytesToString(byte[] input, boolean addZeroes) {
+        StringBuilder string = new StringBuilder();
+        for (byte b : input) {
+            BitSet bitset = BitSet.valueOf(new byte[]{b});
+            int start;
 
-	public static String bytesToString(byte[] input, boolean addZeroes) {
-		String string = "";
-		for (byte b : input) {
-			BitSet bitset = BitSet.valueOf(new byte[]{b});
-			int start;
+            if (addZeroes) {
+                start = 7;
+            } else {
+                start = bitset.length() - 1;
+            }
 
-			if (addZeroes) {
-				start = 7;
-			} else {
-				start = bitset.length() - 1;
-			}
+            for (int i = start; i >= 0; i--) {
+                string.append(bitset.get(i) ? 1 : 0);
+            }
+            string.append(" ");
+        }
+        return string.toString();
+    }
 
-			for (int i = start; i >= 0; i--) {
-				string += bitset.get(i) ? 1 : 0;
-			}
-			string += " ";
-		}
-		return string;
-	}
+    /**
+     * Turns a byte array into a string with added zeroes.
+     *
+     * @param input byte array that needs to be converted
+     * @return string converted from the byte array with added zeroes
+     */
+    public static String bytesToString(byte[] input) {
+        return bytesToString(input, true);
+    }
 
-	public static String bytesToString(byte[] input) {
-		return bytesToString(input, true);
-	}
-
-	public static String bytesToString(byte input) {
-		return bytesToString(new byte[]{input}, true);
-	}
+    /**
+     * Turns a byte into a string.
+     *
+     * @param input byte that needs to be converted to a string
+     * @return string converted from the byte with added zeroes
+     */
+    public static String byteToString(byte input) {
+        return bytesToString(new byte[]{input}, true);
+    }
 }
