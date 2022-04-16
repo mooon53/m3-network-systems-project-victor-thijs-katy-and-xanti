@@ -1,6 +1,8 @@
 package control;
 
 import model.*;
+import view.DebugInterface;
+import view.UI;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,8 +10,6 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import static utils.HelpFunc.*;
 
 /**
  * The implementation of our protocol.
@@ -27,8 +27,12 @@ public class MyProtocol {
     static BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
 
     private final Client client;
+    private UI ui;
+
     private int nodeID;
     private int sequenceNumber;
+
+    private static final boolean DEBUGGING_MODE = true;
 
     /**
      * Constructor of the protocol, starting a client,
@@ -41,15 +45,34 @@ public class MyProtocol {
     public MyProtocol(String serverIp, int serverPort, int frequency) {
         // Give the client the Queues to use
         client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
-
         new ReceiveThread(receivedQueue).start(); // Start thread to handle received messages!
+
+        ui = new UI();
 
         // handle sending from stdin from this thread.
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String input;
+
+            boolean gotNodeID = false;
+
+            input = ui.getInput(br, "What number (0-3) do you want as your nodeID?");
+            while (!gotNodeID) {
+                try {
+                    nodeID = Integer.parseInt(input);
+                    if (nodeID >= 0 && nodeID <= 3) {
+                        gotNodeID = true;
+                    } else {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    input = ui.getInput(br, "Please fill in a number between 0 and 3");
+                }
+            }
+
+
             while (!br.ready()) {
-                input = br.readLine(); // read input
+                input = ui.getInput(br); // read input
                 //System.out.println(input);
                 byte[] inputBytes = input.getBytes(); // get bytes from input
 //                for (byte i : inputBytes) {
@@ -57,12 +80,12 @@ public class MyProtocol {
 //                }
 
                 byte[] packet = new byte[32];
-                byte[] header = Client.createHeader(0, false, false, false, false, 0,
+                Header header = new Header(nodeID, 0, false, false, false, false, 0,
                         input.length(), 0, 0);
-                System.arraycopy(header, 0, packet, 0, 3);
+                System.arraycopy(header.toByteArray(), 0, packet, 0, Header.HEADER_LENGTH);
 
                 // data
-                System.arraycopy(inputBytes, 0, packet, 3, inputBytes.length);
+                System.arraycopy(inputBytes, 0, packet, Header.HEADER_LENGTH, inputBytes.length);
 
                 // make a new byte buffer with the length of the input string
                 ByteBuffer toSend = ByteBuffer.allocate(packet.length);
@@ -129,38 +152,39 @@ public class MyProtocol {
             while (client.isConnected()) {
                 try {
                     Packet m = receivedQueue.take();
-                    switch (m.getType()) {
+                    PacketType p = m.getType();
+                    if (DEBUGGING_MODE) {
+                        DebugInterface.printPacketType(p);
+                    }
+                    switch (p) {
                         case BUSY:
-                            System.out.println("[BUSY]");
                             break;
                         case FREE:
-                            System.out.println("[FREE]");
                             break;
                         case DATA:
-                            Thread messageHandler = new Thread(
-                                    new PacketDecoder(m.getData().array()));
+                            PacketDecoder packetDecoder = new PacketDecoder(m.getData().array());
+                            Thread messageHandler = new Thread(packetDecoder);
                             messageHandler.start();
+                            if (DEBUGGING_MODE) {
+                                DebugInterface.printHeaderInformation(packetDecoder);
+                            }
                             break;
                         case DATA_SHORT:
-                            System.out.print("[DATA_SHORT]: ");
-                            //Just print the data
-                            printByteBuffer(m.getData(), m.getData().capacity());
+                            // TODO: decide what to do with DATA_SHORT
                             break;
                         case DONE_SENDING:
-                            System.out.println("[DONE_SENDING]");
                             break;
                         case HELLO:
-                            System.out.println("[HELLO]");
                             break;
                         case SENDING:
-                            System.out.println("[SENDING]");
                             break;
                         case END:
-                            System.out.println("[END]");
                             System.exit(0);
                             break;
                         case SETUP:
-                            System.out.println("[SETUP] your node is: " + nodeID);
+                            if (DEBUGGING_MODE) {
+                                DebugInterface.printSetup(nodeID);
+                            }
                             break;
                         default:
                             System.out.println();

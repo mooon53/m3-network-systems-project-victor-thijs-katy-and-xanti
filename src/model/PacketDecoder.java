@@ -14,6 +14,10 @@ import static control.Client.*;
  */
 public class PacketDecoder implements Runnable {
 	byte[] packet;
+	String message;
+	Header header;
+
+	// TODO: decide if we want to remove this
 	int source;
 	int dest;
 	boolean syn;
@@ -24,7 +28,6 @@ public class PacketDecoder implements Runnable {
 	int dataLen;
 	int nxtHop;
 	int fragNum;
-	String message;
 
 	/**
 	 * Constructor for the packet decoder.
@@ -40,19 +43,24 @@ public class PacketDecoder implements Runnable {
 	 */
 	public void run() {
 		String firstByte = byteToString(packet[0]);
-		source = Integer.valueOf(firstByte.substring(0, 2), 2);
-		dest = Integer.valueOf(firstByte.substring(2, 4), 2);
-		syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
-		ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
-		frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
-		dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
+		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
+		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
+		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
+		boolean ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
+		boolean frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
+		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
+
 		String secondByte = byteToString(packet[1]);
-		seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
+		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
 		String dataLenPart = secondByte.substring(5, 8);
+
 		String thirdByte = byteToString(packet[2]);
-		dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
-		nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
-		fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
+		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
+		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
+		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
+
+		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
+
 		byte[] messageBytes = new byte[dataLen];
 		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
 		message = new String(messageBytes, StandardCharsets.UTF_8);
@@ -107,9 +115,13 @@ public class PacketDecoder implements Runnable {
 
 	/**
 	 * Forwards a packet which needs to be forwarded to MyProtocol
-	 * with its acknowledgment set to true as a standard.
+	 * with its acknowledgment flag set to true as a standard.
 	 */
 	private void sendPacket() {
 		sendPacket(true);
+	}
+
+	public Header getHeader() {
+		return header;
 	}
 }

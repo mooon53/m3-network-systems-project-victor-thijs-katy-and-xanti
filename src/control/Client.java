@@ -92,87 +92,6 @@ public class Client {
 //	}
 
     /**
-     * Creates a header byte array with all the information correctly set.
-     *
-     * @param dest    destination node ID
-     * @param syn     synchronization flag
-     * @param ack     acknowledgement flag
-     * @param frag    fragmentation flag
-     * @param dm      direct message flag
-     * @param seq     sequence number for the packet
-     * @param dataLen length of the actual data (so excluding the header)
-     * @param nxtHop  node ID from the node who actually sent the packet
-     * @param fragNum fragmentation number to indicate which fragment this is
-     * @return a byte array with all bits set to the corresponding input
-     */
-    public static byte[] createHeader(int dest, boolean syn, boolean ack, boolean frag, boolean dm,
-                                      int seq, int dataLen, int nxtHop, int fragNum) {
-        byte[] output = new byte[3];
-        String firstByte = createFirstHeaderByte(dest, syn, ack, frag, dm);
-        output[0] = stringToByte(firstByte);
-        String secondByte = createSecondHeaderByte(seq, dataLen);
-        output[1] = stringToByte(secondByte);
-        String thirdByte = createThirdHeaderByte(dataLen, nxtHop, fragNum);
-        output[2] = stringToByte(thirdByte);
-        return output;
-    }
-
-    /**
-     * Creates a string of bits for the first byte of the header.
-     *
-     * @param dest destination node ID
-     * @param syn  synchronization flag
-     * @param ack  acknowledgement flag
-     * @param frag fragmentation flag
-     * @param dm   direct message flag
-     * @return a string of bits for the first byte of the header
-     */
-    public static String createFirstHeaderByte(int dest, boolean syn, boolean ack, boolean frag,
-                                               boolean dm) {
-        StringBuilder firstByte = new StringBuilder();
-        boolean[] flags = {syn, ack, frag, dm};
-        firstByte.append(padString(Integer.toBinaryString(nodeID), 2));
-        firstByte.append(padString(Integer.toBinaryString(dest), 2));
-        for (boolean flag : flags) {
-            firstByte.append(flag ? "1" : "0");
-        }
-        return firstByte.toString();
-    }
-
-    /**
-     * Creates a string of bits for the second byte of the header.
-     *
-     * @param seq     sequence number for the packet
-     * @param dataLen length of the actual data (so excluding the header)
-     * @return a string of bits for the second byte of the header
-     */
-    public static String createSecondHeaderByte(int seq, int dataLen) {
-        String output = "";
-        output += padString(Integer.toBinaryString(seq), 5);
-        String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
-        output += dataLenString.substring(0, 3);
-        return output;
-    }
-
-    /**
-     * Creates a string of bits for the third byte of the header.
-     *
-     * @param dataLen length of the actual data (so excluding the header)
-     * @param nxtHop  node ID from the node who actually sent the packet
-     * @param fragNum fragmentation number to indicate which fragment this is
-     * @return a string of bits for the third byte of the header
-     */
-    public static String createThirdHeaderByte(int dataLen, int nxtHop, int fragNum) {
-        String output = "";
-        String dataLenString = padString(Integer.toBinaryString(dataLen), 5);
-        output += dataLenString.substring(3);
-        output += padString(Integer.toBinaryString(nxtHop), 2);
-        output += padString(Integer.toBinaryString(fragNum), 4);
-        return output;
-    }
-
-
-    /**
      * Client constructor which also starts the listener and sender.
      *
      * @param serverIp      server IP on which the socket is connected
@@ -239,7 +158,8 @@ public class Client {
                     if (msg.getType() == PacketType.DATA
                             || msg.getType() == PacketType.DATA_SHORT) {
                         ByteBuffer data = msg.getData();
-                        data.position(0); //reset position just to be sure
+                        //reset position just to be sure
+                        data.position(0);
                         //assume capacity is also what we want to send here!
                         int length = data.capacity();
                         ByteBuffer toSend = ByteBuffer.allocate(length + 2);
@@ -247,13 +167,14 @@ public class Client {
                             toSend.put((byte) 10);
                         } else if (msg.getType() == PacketType.DATA) {
                             toSend.put((byte) 3);
-                        } else { // must be DATA_SHORT due to check above
+                        } else {
+                            // must be DATA_SHORT due to check above
                             toSend.put((byte) 6);
                         }
                         toSend.put((byte) length);
                         toSend.put(data);
                         toSend.position(0);
-                        // System.out.println("Sending "+Integer.toString(length)+" bytes!");
+                        // System.out.println("Sending " + Integer.toString(length) + " bytes!");
                         sock.write(toSend);
                     }
                 } catch (IOException e) {
@@ -335,14 +256,14 @@ public class Client {
                             messageBuffer.put(d);
                         }
                         if (messageBuffer.position() == messageLength) {
-                            //Return DATA here
-                            //printByteBuffer(messageBuffer, messageLength);
-                            //System.out.println("pos:"+Integer.toString(messageBuffer.position()));
+                            // Return DATA here
+                            // printByteBuffer(messageBuffer, messageLength);
+                            // System.out.println("pos:" + messageBuffer.position());
                             messageBuffer.position(0);
                             ByteBuffer temp = ByteBuffer.allocate(messageLength);
                             temp.put(messageBuffer);
                             temp.rewind();
-                            //TODO: put SETUP message
+                            // TODO: put SETUP message
                             if (setup) {
                                 receivedQueue.put(new Packet(PacketType.SETUP, temp));
                             } else if (shortData) {
@@ -401,7 +322,7 @@ public class Client {
                 }
 
             } catch (InterruptedException e) {
-                System.err.println("Failed to put data in receivedQueue: " + e.toString());
+                System.err.println("Failed to put data in receivedQueue: " + e);
             }
         }
 
@@ -434,6 +355,5 @@ public class Client {
         public void run() {
             receivingLoop();
         }
-
     }
 }

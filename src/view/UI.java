@@ -27,9 +27,10 @@ public class UI {
      * @throws IOException throws IOException if the BufferedReader throws an IOException
      */
     //add \n to the prompt if you want a newline
-    public String getInput(String prompt) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        System.out.print(prompt);
+    public String getInput(BufferedReader br, String prompt) throws IOException {
+        if (!prompt.equals("")) {
+            System.out.println(prompt);
+        }
         System.out.print("> ");
         return br.readLine();
     }
@@ -40,7 +41,7 @@ public class UI {
      * @return the input from the user
      * @throws IOException throws IOException if the BufferedReader throws an IOException
      */
-    public String getInput() throws IOException {
-        return getInput("");
+    public String getInput(BufferedReader br) throws IOException {
+        return getInput(br, "");
     }
 }
