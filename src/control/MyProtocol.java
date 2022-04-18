@@ -43,19 +43,21 @@ public class MyProtocol {
      * @param frequency  frequency on which the communication should take place
      */
     public MyProtocol(String serverIp, int serverPort, int frequency) {
-        // Give the client the Queues to use
+        // give the client the Queues to use
         client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
-        new ReceiveThread(receivedQueue).start(); // Start thread to handle received messages!
+        // start thread to handle received messages!
+        new ReceiveThread(receivedQueue).start();
 
         ui = new UI();
+        sequenceNumber = 0;
 
-        // handle sending from stdin from this thread.
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String input;
 
             boolean gotNodeID = false;
 
+            // get everyone to pick a nodeID between (0-3)
             input = ui.getInput(br, "What number (0-3) do you want as your nodeID?");
             while (!gotNodeID) {
                 try {
@@ -70,29 +72,31 @@ public class MyProtocol {
                 }
             }
 
-
+            // handle sending from System.in from this thread
             while (!br.ready()) {
                 input = ui.getInput(br); // read input
-                //System.out.println(input);
                 byte[] inputBytes = input.getBytes(); // get bytes from input
-//                for (byte i : inputBytes) {
-//                    System.out.println(i);
-//                }
 
+                // create a byte array for the packet
                 byte[] packet = new byte[32];
-                Header header = new Header(nodeID, 0, false, false, false, false, 0,
+                Header header = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
                         input.length(), 0, 0);
+
+                // copy the header into the packet array
                 System.arraycopy(header.toByteArray(), 0, packet, 0, Header.HEADER_LENGTH);
 
-                // data
+                // TODO: implement fragmentation
+                // copy the data into the packet array
                 System.arraycopy(inputBytes, 0, packet, Header.HEADER_LENGTH, inputBytes.length);
 
-                // make a new byte buffer with the length of the input string
+                // make a new byte buffer in which you put the packet
                 ByteBuffer toSend = ByteBuffer.allocate(packet.length);
-                toSend.put(packet, 0, packet.length); // copy the input string into the byte buffer.
-                Packet msg;
-                //TODO: send the setup and find index using SYN
+                toSend.put(packet, 0, packet.length); //
 
+                // TODO: send the setup and find index using SYN
+
+                // TODO: send every so and so, not immediately here
+                Packet msg;
                 if ((input.length()) > 2) {
                     msg = new Packet(PacketType.DATA, toSend);
                 } else {
@@ -151,18 +155,23 @@ public class MyProtocol {
         public void run() {
             while (client.isConnected()) {
                 try {
+                    // take a packet from the queue and process it
                     Packet m = receivedQueue.take();
                     PacketType p = m.getType();
                     if (DEBUGGING_MODE) {
                         DebugInterface.printPacketType(p);
                     }
+
+                    // switch over the data type and handle accordingly
                     switch (p) {
                         case BUSY:
                             break;
                         case FREE:
                             break;
                         case DATA:
+                            // for a data packet, make a packetDecoder
                             PacketDecoder packetDecoder = new PacketDecoder(m.getData().array());
+                            // for the decoder, make a messageHandler and start it as a thread
                             Thread messageHandler = new Thread(packetDecoder);
                             messageHandler.start();
                             if (DEBUGGING_MODE) {
