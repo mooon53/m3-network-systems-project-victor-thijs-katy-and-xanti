@@ -18,7 +18,7 @@ public class Header {
     private int nxtHop;
     private int fragNum;
 
-    static final int HEADER_LENGTH = 3;
+    public static final int HEADER_LENGTH = 3;
 
     /**
      * Constructor for the header object.
@@ -35,7 +35,7 @@ public class Header {
      * @param fragNum fragmentation number
      */
     public Header(int source, int dest, boolean syn, boolean ack, boolean frag, boolean dm,
-                  int seqNum, int dataLen, int nxtHop, int fragNum) {
+                    int seqNum, int dataLen, int nxtHop, int fragNum) {
         this.source = source;
         this.dest = dest;
         this.syn = syn;
@@ -47,6 +47,8 @@ public class Header {
         this.nxtHop = nxtHop;
         this.fragNum = fragNum;
     }
+
+
 
     /**
      * Header constructor with everything set to standard.
@@ -111,11 +113,11 @@ public class Header {
      * @return a string of bits for the second byte of the header
      */
     public String createSecondHeaderByte(int seq, int dataLength) {
-        String output = "";
-        output += padString(Integer.toBinaryString(seq), 5);
+        StringBuilder output = new StringBuilder();
+        output.append(padString(Integer.toBinaryString(seq), 5));
         String dataLenString = padString(Integer.toBinaryString(dataLength), 5);
-        output += dataLenString.substring(0, 3);
-        return output;
+        output.append(dataLenString.substring(0, 3));
+        return output.toString();
     }
 
     /**
@@ -137,12 +139,12 @@ public class Header {
      * @return a string of bits for the third byte of the header
      */
     public String createThirdHeaderByte(int dataLength, int nextHop, int fragNumber) {
-        String output = "";
+        StringBuilder output = new StringBuilder();
         String dataLenString = padString(Integer.toBinaryString(dataLength), 5);
-        output += dataLenString.substring(3);
-        output += padString(Integer.toBinaryString(nextHop), 2);
-        output += padString(Integer.toBinaryString(fragNumber), 4);
-        return output;
+        output.append(dataLenString.substring(3));
+        output.append(padString(Integer.toBinaryString(nextHop), 2));
+        output.append(padString(Integer.toBinaryString(fragNumber), 4));
+        return output.toString();
     }
 
     /**

@@ -1,8 +1,9 @@
 package view;
 
-import control.Packet;
-import control.PacketType;
+import control.*;
 import model.PacketDecoder;
+
+import java.util.Arrays;
 
 /**
  * Debugging interface printing statements.
@@ -44,7 +45,7 @@ public class DebugInterface {
     public static void printPacket(Packet packet, String prompt) {
         System.out.println(debuggingFormat(prompt
                 + packet.getType().toString().toUpperCase()
-                + packet.getData().toString().toUpperCase(), false));
+                + Arrays.toString(packet.getData().array()), false));
     }
 
     /**
@@ -61,7 +62,7 @@ public class DebugInterface {
      *
      * @param packetDecoder
      */
-    public static void printHeaderInformation(PacketDecoder packetDecoder) {
-        System.out.println(debuggingFormat(packetDecoder.getHeader().toString(), true));
+    public static void printHeaderInformation(Header header) {
+            System.out.println(debuggingFormat(header.toString(), true));
     }
 }

@@ -1,10 +1,11 @@
 package model;
 
 import control.*;
-import view.UI;
+import view.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static utils.HelpFunc.*;
 import static control.Client.*;
@@ -64,7 +65,6 @@ public class PacketDecoder implements Runnable {
 
 		// create a header with all the abstracted information
 		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
-
 		// abstract the actual text data from the packet
 		byte[] messageBytes = new byte[dataLen];
 		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
@@ -76,6 +76,10 @@ public class PacketDecoder implements Runnable {
 	 * Handles a packet according to the information in the header.
 	 */
 	private void handlePackage() {
+		if (MyProtocol.DEBUGGING_MODE) {
+			System.out.println(bytesToString(packet));
+			DebugInterface.printHeaderInformation(header);
+		}
 		// connect the package to a fragmentation handler
 		FragHandler fragHandler = new FragHandler();
 		if (fragHandlerExists(seqNum)) {
@@ -97,7 +101,7 @@ public class PacketDecoder implements Runnable {
 				// else if it is a fragment and the handler already exists,
 				// then pass it to that fragHandler
 				getFragHandler(seqNum).addFragment(fragment);
-			} else if (!dm){
+			} else if (!dm) {
 				// if it is not a fragment and not a direct message,
 				// then we can make it a full message and print it
 				Message fullMessage = new Message(source, message);
@@ -138,9 +142,10 @@ public class PacketDecoder implements Runnable {
 
 	/**
 	 * Gets the header object from the packetDecoder.
+	 *
 	 * @return header object from the packetDecoder
 	 */
-	public Header getHeader() {
+	public Header getHeader() throws InterruptedException {
 		return header;
 	}
 }
