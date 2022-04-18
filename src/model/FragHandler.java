@@ -51,6 +51,7 @@ public class FragHandler implements Runnable {
      * Runs to look if a message got completed.
      */
     public void run() {
+        // check every 0.1 second if a full message is complete
         while (!isComplete()) {
             try {
                 Thread.sleep(100);
@@ -58,6 +59,8 @@ public class FragHandler implements Runnable {
                 // TODO: ask a TA what to put here
             }
         }
+
+        // if the message is complete, print it to the UI
         StringBuilder message = new StringBuilder();
         for (int i = 0; i < fragments.size(); i++) {
             String fragment = fragments.get(i);
@@ -103,6 +106,8 @@ public class FragHandler implements Runnable {
      */
     @SuppressWarnings("InvisibleCharacter")
     public boolean isComplete() {
+        // for a message to be complete means that the final segment has been received,
+        // and that the length of the fragments list equals the ID of the last fragment
         int highestID = max(fragments.keySet());
         String lastFragment = fragments.get(highestID);
         // DON'T REMOVE "", it is a special character we actually use
