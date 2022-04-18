@@ -14,6 +14,7 @@ public class HelpFunc {
      * @param bytesLength length of the ByteBuffer
      */
     public static void printByteBuffer(ByteBuffer bytes, int bytesLength) {
+        // prints out the bytes in a ByteBuffer
         System.out.print("DATA: ");
         for (int i = 0; i < bytesLength; i++) {
             System.out.print(bytes.get(i) + " ");
@@ -28,6 +29,7 @@ public class HelpFunc {
      * @return byte corresponding to the given bitset
      */
     public static byte bitsetToByte(BitSet bitset) {
+        // simply converts every bitset that is smaller or equal to 8 bits to a byte
         if (bitset.length() > 8) {
             return 0;
         }
@@ -87,6 +89,8 @@ public class HelpFunc {
      */
     public static String padString(String input, int length) {
         StringBuilder inputBuilder = new StringBuilder(input);
+        // simply add as many 0's as indicated with the length
+        // to the beginning of the given input string
         while (inputBuilder.length() < length) {
             inputBuilder.insert(0, "0");
         }
@@ -155,10 +159,13 @@ public class HelpFunc {
      */
     public static String bytesToString(byte[] input, boolean addZeroes) {
         StringBuilder string = new StringBuilder();
+        // loop over all the bytes in the given array
         for (byte b : input) {
             BitSet bitset = BitSet.valueOf(new byte[]{b});
             int start;
 
+            // if we want to add zeroes we start from 7 (so in total 8 bits),
+            // otherwise we would want to start from the length of the BitSet
             if (addZeroes) {
                 start = 7;
             } else {
