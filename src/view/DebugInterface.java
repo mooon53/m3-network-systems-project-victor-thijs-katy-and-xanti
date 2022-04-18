@@ -62,6 +62,8 @@ public class DebugInterface {
      * @param packetDecoder
      */
     public static void printHeaderInformation(PacketDecoder packetDecoder) {
+
+
         System.out.println(debuggingFormat(packetDecoder.getHeader().toString(), true));
     }
 }

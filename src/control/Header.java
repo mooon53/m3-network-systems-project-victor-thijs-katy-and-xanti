@@ -18,7 +18,7 @@ public class Header {
     private int nxtHop;
     private int fragNum;
 
-    static final int HEADER_LENGTH = 3;
+    public static final int HEADER_LENGTH = 3;
 
     /**
      * Constructor for the header object.

@@ -73,6 +73,40 @@ public class PacketDecoder implements Runnable {
 	}
 
 	/**
+	 * TEST.
+	 */
+	public void decode() {
+		// separate every part of the header from the first byte
+		String firstByte = byteToString(packet[0]);
+		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
+		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
+		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
+		boolean ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
+		boolean frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
+		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
+
+		// separate every part of the header from the second byte
+		String secondByte = byteToString(packet[1]);
+		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
+		String dataLenPart = secondByte.substring(5, 8);
+
+		// separate every part of the header from the third byte
+		String thirdByte = byteToString(packet[2]);
+		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
+		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
+		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
+
+		// create a header with all the abstracted information
+		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
+
+		// abstract the actual text data from the packet
+		byte[] messageBytes = new byte[dataLen];
+		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
+		message = new String(messageBytes, StandardCharsets.UTF_8);
+		handlePackage();
+	}
+
+	/**
 	 * Handles a packet according to the information in the header.
 	 */
 	private void handlePackage() {

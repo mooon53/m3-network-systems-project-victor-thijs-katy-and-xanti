@@ -17,6 +17,15 @@ public class Test {
 		System.out.println(test.endsWith(""));
 
 		System.out.println(bytesToString(new byte[]{0x00, 0x01}, false));
+
+		int[][] arrayArray = new int[3][2];
+		arrayArray[0] = new int[]{1, 1, 1, 1};
+		for (int[] array : arrayArray) {
+			System.out.println("ayayay");
+			for (int integer : array) {
+				System.out.println(integer);
+			}
+		}
 	}
 
 	public static String bytesToString(byte[] input, boolean addZeroes) {

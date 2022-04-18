@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static control.PacketType.DATA;
+
 /**
  * The implementation of our protocol.
  */
@@ -57,6 +59,7 @@ public class MyProtocol {
 
             boolean gotNodeID = false;
 
+            // TODO: send the setup and find index using SYN
             // get everyone to pick a nodeID between (0-3)
             input = ui.getInput(br, "What number (0-3) do you want as your nodeID?");
             while (!gotNodeID) {
@@ -74,35 +77,37 @@ public class MyProtocol {
 
             // handle sending from System.in from this thread
             while (!br.ready()) {
-                input = ui.getInput(br); // read input
-                byte[] inputBytes = input.getBytes(); // get bytes from input
-
-                // create a byte array for the packet
-                byte[] packet = new byte[32];
-                Header header = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
-                        input.length(), 0, 0);
-
-                // copy the header into the packet array
-                System.arraycopy(header.toByteArray(), 0, packet, 0, Header.HEADER_LENGTH);
-
-                // TODO: implement fragmentation
-                // copy the data into the packet array
-                System.arraycopy(inputBytes, 0, packet, Header.HEADER_LENGTH, inputBytes.length);
-
-                // make a new byte buffer in which you put the packet
-                ByteBuffer toSend = ByteBuffer.allocate(packet.length);
-                toSend.put(packet, 0, packet.length); //
-
-                // TODO: send the setup and find index using SYN
-
-                // TODO: send every so and so, not immediately here
-                Packet msg;
-                if ((input.length()) > 2) {
-                    msg = new Packet(PacketType.DATA, toSend);
-                } else {
-                    msg = new Packet(PacketType.DATA_SHORT, toSend);
+                // read input
+                input = ui.getInput(br);
+                while (input.length() > 463 ) {
+                    input = ui.getInput(br, "Please put in a message " +
+                            "with a maximum of 463 characters");
                 }
-                sendingQueue.put(msg);
+                byte[] inputBytes = input.getBytes(); // get bytes from input
+                Header standardHeader = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
+                        0, nodeID, 0);
+                PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
+
+                for (byte[] packet : packetEncoder.fragmentedMessage()) {
+
+                    // make a new byte buffer in which you put the packet
+                    ByteBuffer toSend = ByteBuffer.allocate(packet.length);
+                    toSend.put(packet, 0, packet.length);
+
+                    if (DEBUGGING_MODE) {
+                        DebugInterface.printPacket(new Packet(DATA, toSend), "");
+                    }
+
+                    // TODO: send every so and so, not immediately here
+                    Packet msg;
+                    if ((input.length()) > 2) {
+                        msg = new Packet(DATA, toSend);
+                    } else {
+                        msg = new Packet(PacketType.DATA_SHORT, toSend);
+                    }
+                    sendingQueue.put(msg);
+                }
+
             }
         } catch (InterruptedException | IOException e) {
             System.exit(2);
