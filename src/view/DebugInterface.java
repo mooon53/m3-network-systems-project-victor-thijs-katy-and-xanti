@@ -60,7 +60,7 @@ public class DebugInterface {
     /**
      * Prints the information contained in the header.
      *
-     * @param packetDecoder
+     * @param header Header to print
      */
     public static void printHeaderInformation(Header header) {
             System.out.println(debuggingFormat(header.toString(), true));

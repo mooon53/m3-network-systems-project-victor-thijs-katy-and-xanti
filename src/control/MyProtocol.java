@@ -12,53 +12,56 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static control.PacketType.DATA;
+
 /**
  * The implementation of our protocol.
  */
 public class MyProtocol {
 
-	// The host to connect to. Set this to localhost when using the audio interface tool.
-	private static final String SERVER_IP = "netsys.ewi.utwente.nl"; //"127.0.0.1";
-	// The port to connect to. 8954 for the simulation server.
-	private static final int SERVER_PORT = 8954;
-	// The frequency to use.
-	private static int frequency = 500 + 9 * 100;
+    // The host to connect to. Set this to localhost when using the audio interface tool.
+    private static final String SERVER_IP = "netsys.ewi.utwente.nl"; //"127.0.0.1";
+    // The port to connect to. 8954 for the simulation server.
+    private static final int SERVER_PORT = 8954;
+    // The frequency to use.
+    private static int frequency = 500 + 9 * 100;
 
-	BlockingQueue<Packet> receivedQueue = new LinkedBlockingQueue<>();
-	static BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
+    BlockingQueue<Packet> receivedQueue = new LinkedBlockingQueue<>();
+    static BlockingQueue<Packet> sendingQueue = new LinkedBlockingQueue<>();
 
-	private final Client client;
-	private UI ui;
+    private final Client client;
+    private UI ui;
 
-	private int nodeID;
-	private int sequenceNumber;
+    private int nodeID;
+    private int sequenceNumber;
 
-	public static final boolean DEBUGGING_MODE = true;
+    public static final boolean DEBUGGING_MODE = true;
 
-	/**
-	 * Constructor of the protocol, starting a client,
-	 * receiving thread, while waiting for text input.
-	 *
-	 * @param serverIp   IP of the server to connect to
-	 * @param serverPort port of the server to connect to
-	 * @param frequency  frequency on which the communication should take place
-	 */
-	public MyProtocol(String serverIp, int serverPort, int frequency) {
-		// give the client the Queues to use
-		client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
-		// start thread to handle received messages!
-		new ReceiveThread(receivedQueue).start();
+    /**
+     * Constructor of the protocol, starting a client,
+     * receiving thread, while waiting for text input.
+     *
+     * @param serverIp   IP of the server to connect to
+     * @param serverPort port of the server to connect to
+     * @param frequency  frequency on which the communication should take place
+     */
+    public MyProtocol(String serverIp, int serverPort, int frequency) {
+        // give the client the Queues to use
+        client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
+        // start thread to handle received messages!
+        new ReceiveThread(receivedQueue).start();
 
-		ui = new UI();
-		sequenceNumber = 0;
+        ui = new UI();
+        sequenceNumber = 0;
 
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			String input;
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            String input;
 
-			boolean gotNodeID = false;
+            boolean gotNodeID = false;
 
-			// get everyone to pick a nodeID between (0-3)
+			// TODO: send the setup and find index using SYN
+            // get everyone to pick a nodeID between (0-3)
 			input = ui.getInput(br, "What number (0-3) do you want as your nodeID?");
 			while (!gotNodeID) {
 				try {
@@ -74,42 +77,44 @@ public class MyProtocol {
 				}
 			}
 
-			// handle sending from System.in from this thread
-			while (!br.ready()) {
-				input = ui.getInput(br); // read input
-				byte[] inputBytes = input.getBytes(); // get bytes from input
+            // handle sending from System.in from this thread
+            while (!br.ready()) {
+                // read input
+                input = ui.getInput(br);
+                while (input.length() > 463 ) {
+                    input = ui.getInput(br, "Please put in a message " +
+                            "with a maximum of 463 characters");
+                }
+                byte[] inputBytes = input.getBytes(); // get bytes from input
+                Header standardHeader = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
+                        0, nodeID, 0);
+                PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
 
-				// create a byte array for the packet
-				byte[] packet = new byte[32];
-				Header header = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
-						input.length(), 0, 0);
+                for (byte[] packet : packetEncoder.fragmentedMessage()) {
 
-				// copy the header into the packet array
-				System.arraycopy(header.toByteArray(), 0, packet, 0, Header.HEADER_LENGTH);
+                    // make a new byte buffer in which you put the packet
+                    ByteBuffer toSend = ByteBuffer.allocate(packet.length);
+                    toSend.put(packet, 0, packet.length);
 
-				// TODO: implement fragmentation
-				// copy the data into the packet array
-				System.arraycopy(inputBytes, 0, packet, Header.HEADER_LENGTH, inputBytes.length);
+                    if (DEBUGGING_MODE) {
+                        DebugInterface.printPacket(new Packet(DATA, toSend), "");
+                    }
 
-				// make a new byte buffer in which you put the packet
-				ByteBuffer toSend = ByteBuffer.allocate(packet.length);
-				toSend.put(packet, 0, packet.length); //
+                    // TODO: send every so and so, not immediately here
+                    Packet msg;
+                    if ((input.length()) > 2) {
+                        msg = new Packet(DATA, toSend);
+                    } else {
+                        msg = new Packet(PacketType.DATA_SHORT, toSend);
+                    }
+                    sendingQueue.put(msg);
+                }
 
-				// TODO: send the setup and find index using SYN
-
-				// TODO: send every so and so, not immediately here
-				Packet msg;
-				if ((input.length()) > 2) {
-					msg = new Packet(PacketType.DATA, toSend);
-				} else {
-					msg = new Packet(PacketType.DATA_SHORT, toSend);
-				}
-				sendingQueue.put(msg);
-			}
-		} catch (InterruptedException | IOException e) {
-			System.exit(2);
-		}
-	}
+            }
+        } catch (InterruptedException | IOException e) {
+            System.exit(2);
+        }
+    }
 
 	/**
 	 * Main method starting a new MyProtocol.
