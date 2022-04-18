@@ -25,9 +25,7 @@ public class PacketEncoder {
         byte[] packetData;
         for (int fragNum = 0; fragNum < numPackets; fragNum++) {
             if ((fragNum + 1)  == numPackets) {
-                System.err.println(dataLength);
                 packetDataLength = (dataLength - (29 * fragNum)) % 29;
-                System.err.println(packetDataLength);
             }
 
             packetData = Arrays.copyOfRange(data, fragNum * 29, fragNum * 29 + packetDataLength);
@@ -42,7 +40,7 @@ public class PacketEncoder {
             System.arraycopy(packetData, 0, packet, Header.HEADER_LENGTH, packetDataLength);
 
             if ((fragNum + 1)  == numPackets) {
-                packet[Header.HEADER_LENGTH + packetDataLength] = 0x2a;
+                packet[Header.HEADER_LENGTH + packetDataLength] = 0x03;
             }
 
             fragmented[fragNum] = packet;
