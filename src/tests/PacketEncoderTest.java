@@ -34,7 +34,7 @@ public class PacketEncoderTest {
         for (byte[] packet : packetEncoder.fragmentedMessage()) {
             PacketDecoder packetDecoder = new PacketDecoder(packet);
             packetDecoder.decode();
-            DebugInterface.printHeaderInformation(packetDecoder);
+            DebugInterface.printHeaderInformation(packetDecoder.getHeader());
         }
     }
 

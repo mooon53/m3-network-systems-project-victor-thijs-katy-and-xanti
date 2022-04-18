@@ -179,7 +179,7 @@ public class PacketDecoder implements Runnable {
 	 *
 	 * @return header object from the packetDecoder
 	 */
-	public Header getHeader() throws InterruptedException {
+	public Header getHeader() {
 		return header;
 	}
 }
