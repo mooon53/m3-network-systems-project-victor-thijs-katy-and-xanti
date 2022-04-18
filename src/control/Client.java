@@ -7,7 +7,9 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import static control.MyProtocol.DEBUGGING_MODE;
 import static utils.HelpFunc.*;
+import static view.DebugInterface.printPacket;
 
 import model.*;
 
@@ -22,7 +24,7 @@ public class Client {
     private BlockingQueue<Packet> receivedQueue;
     private BlockingQueue<Packet> sendingQueue;
 
-    private static int nodeID = 3;
+    private int nodeID = 3;
 
     private static HashMap<Integer, FragHandler> receivedMessages = new HashMap();
 
@@ -83,14 +85,6 @@ public class Client {
         this.nodeID = nodeID;
     }
 
-//	public void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-//		System.out.print("DATA: ");
-//		for (int i = 0; i < bytesLength; i++) {
-//			System.out.print(bytes.get(i) + " ");
-//		}
-//		System.out.println();
-//	}
-
     /**
      * Client constructor which also starts the listener and sender.
      *
@@ -103,15 +97,17 @@ public class Client {
      */
     public Client(String serverIp, int serverPort, int frequency,
                   BlockingQueue<Packet> receivedQueue, BlockingQueue<Packet> sendingQueue, int id) {
+        // for every client, create a receiving and a sending queue
         this.receivedQueue = receivedQueue;
         this.sendingQueue = sendingQueue;
         this.nodeID = id;
         try {
             sock = SocketChannel.open();
             sock.connect(new InetSocketAddress(serverIp, serverPort));
+
+            // create a listener and sender connected to the socket
             listener = new Listener(sock, receivedQueue);
             sender = new Sender(sock, sendingQueue);
-            //dont worry, be happy (c)Thijs
 
             sender.sendConnect(frequency);
 
@@ -154,13 +150,14 @@ public class Client {
         private void senderLoop() {
             while (sock.isConnected()) {
                 try {
+                    // take a packet from the sending queue
                     Packet msg = sendingQueue.take();
                     if (msg.getType() == PacketType.DATA
                             || msg.getType() == PacketType.DATA_SHORT) {
                         ByteBuffer data = msg.getData();
-                        //reset position just to be sure
+                        // reset position just to be sure
                         data.position(0);
-                        //assume capacity is also what we want to send here!
+                        // assume capacity is also what we want to send here!
                         int length = data.capacity();
                         ByteBuffer toSend = ByteBuffer.allocate(length + 2);
                         if (msg.getType() == PacketType.SETUP) {
@@ -174,7 +171,9 @@ public class Client {
                         toSend.put((byte) length);
                         toSend.put(data);
                         toSend.position(0);
-                        // System.out.println("Sending " + Integer.toString(length) + " bytes!");
+                        if (DEBUGGING_MODE) {
+                            printPacket(msg, "Sending (TYPE, data): ");
+                        }
                         sock.write(toSend);
                     }
                 } catch (IOException e) {
@@ -256,9 +255,9 @@ public class Client {
                             messageBuffer.put(d);
                         }
                         if (messageBuffer.position() == messageLength) {
-                            // Return DATA here
+                            // return DATA here
                             // printByteBuffer(messageBuffer, messageLength);
-                            // System.out.println("pos:" + messageBuffer.position());
+                            // TODO: System.out.println("pos:" + messageBuffer.position());
                             messageBuffer.position(0);
                             ByteBuffer temp = ByteBuffer.allocate(messageLength);
                             temp.put(messageBuffer);

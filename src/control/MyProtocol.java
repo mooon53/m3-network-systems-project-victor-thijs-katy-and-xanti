@@ -32,7 +32,7 @@ public class MyProtocol {
     private int nodeID;
     private int sequenceNumber;
 
-    private static final boolean DEBUGGING_MODE = true;
+    public static final boolean DEBUGGING_MODE = true;
 
     /**
      * Constructor of the protocol, starting a client,
