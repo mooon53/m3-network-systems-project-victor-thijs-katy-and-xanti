@@ -16,7 +16,7 @@ public class PacketEncoder {
 
     public byte[][] fragmentedMessage() {
         int numPackets = numPackets(dataLength);
-        standardHeader.setFrag(true);
+        if (numPackets > 1) standardHeader.setFrag(true);
 
         fragmented = new byte[numPackets][];
 
@@ -39,9 +39,9 @@ public class PacketEncoder {
             // copy the data into the packet array
             System.arraycopy(packetData, 0, packet, Header.HEADER_LENGTH, packetDataLength);
 
-            if ((fragNum + 1)  == numPackets) {
-                packet[Header.HEADER_LENGTH + packetDataLength] = 0x03;
-            }
+//            if ((fragNum + 1)  == numPackets) {
+//                packet[Header.HEADER_LENGTH + packetDataLength] = 0x03;
+//            }
 
             fragmented[fragNum] = packet;
         }
@@ -52,6 +52,13 @@ public class PacketEncoder {
     public PacketEncoder(byte[] data, Header standardHeader) {
         this.data = data;
         dataLength = data.length;
+        if (data.length > 29) {
+            byte[] dataFrag = new byte[data.length + 1];
+            System.arraycopy(data, 0, dataFrag, 0, data.length);
+            dataFrag[dataFrag.length-1] = 0x03;
+            dataLength++;
+            this.data = dataFrag;
+        }
         this.standardHeader = standardHeader;
     }
 

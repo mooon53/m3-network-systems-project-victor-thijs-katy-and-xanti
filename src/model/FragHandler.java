@@ -16,7 +16,8 @@ public class FragHandler implements Runnable {
     private int sourceID;
     private int seqNum;
     private HashMap<Integer, String> fragments = new HashMap<>();
-    private String delimiter = "";
+    // DON'T REMOVE "", it is a special character we actually use
+    private final String delimiter = "";
 
     /**
      * Constructor for the fragmentation handler putting the fragment into a storing HashMap.
@@ -26,11 +27,14 @@ public class FragHandler implements Runnable {
      * @param fragID   fragmentation number of the fragment
      * @param fragment text message contained in the fragment
      */
-    public FragHandler(int sourceID, int seqNum, int fragID, String fragment) {
-        this.sourceID = sourceID;
-        this.seqNum = seqNum;
-        fragments.put(fragID, fragment);
-    }
+//    public FragHandler(int sourceID, int seqNum, int fragID, String fragment) {
+//        this.sourceID = sourceID;
+//        this.seqNum = seqNum;
+//        fragments.put(fragID, fragment);
+//        System.out.println(this);
+//        System.out.println("frag handler created for sequence " + seqNum + " and fragment number " + fragID);
+//        System.out.println("fragments length " + fragments.size());
+//    }
 
     /**
      * Constructor for the fragmentation handler only needing a Fragment object as input.
@@ -38,8 +42,9 @@ public class FragHandler implements Runnable {
      * @param fragment fragment for which the fragmentation handler is made
      */
     public FragHandler(Fragment fragment) {
-        new FragHandler(fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID(),
-                fragment.getMessagePart());
+        sourceID = fragment.getHeader().getSource();
+        seqNum = fragment.getHeader().getSeqNum();
+        fragments.put(fragment.getHeader().getFragNum(), fragment.getMessagePart());
     }
 
     /**
@@ -89,7 +94,11 @@ public class FragHandler implements Runnable {
      * @param fragment Fragment object to put into the fragmentation handler
      */
     public void addFragment(Fragment fragment) {
-        addFragment(fragment.getFragID(), fragment.getMessagePart());
+        addFragment(fragment.getHeader().getFragNum(), fragment.getMessagePart());
+        System.out.println(this);
+        System.out.println("fragment with sequence " + fragment.getHeader().getSeqNum() + " and frag " + fragment.getHeader().getFragNum());
+        System.out.println("fragments length " + fragments.size());
+        System.out.println("data length set to " + fragment.getHeader().getDataLen());
     }
 
     /**
@@ -111,9 +120,13 @@ public class FragHandler implements Runnable {
     public boolean isComplete() {
         // for a message to be complete means that the final segment has been received,
         // and that the length of the fragments list equals the ID of the last fragment
+        if (fragments.isEmpty()) return false;
+        System.out.println("does not always return false");
         int highestID = max(fragments.keySet());
         String lastFragment = fragments.get(highestID);
-        // DON'T REMOVE "", it is a special character we actually use
+        System.out.println(lastFragment);
+        System.out.println(lastFragment.endsWith(delimiter));
+        System.out.println(fragments.size());
         return lastFragment.endsWith(delimiter) && fragments.size() == highestID + 1;
     }
 }

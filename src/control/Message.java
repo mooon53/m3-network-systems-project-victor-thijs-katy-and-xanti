@@ -19,7 +19,7 @@ public class Message {
     }
 
     public Message(Fragment fragment) {
-        this.sourceID = fragment.getSourceID();
+        this.sourceID = fragment.getHeader().getSource();
         this.message = fragment.getMessagePart();
     }
 

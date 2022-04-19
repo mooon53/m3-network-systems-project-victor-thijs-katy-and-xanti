@@ -32,8 +32,10 @@ public class PacketStorage {
 	}
 
 	public void addPacket(Fragment fragment, Packet packet, boolean dm) {
-		long ID = ID(fragment.getSeqNum(), fragment.getFragID());
-		int hashMapID = hashMapID(fragment.getSourceID());
+		Header header = fragment.getHeader();
+		System.out.println("Packet added to packet storage seq " + header.getSeqNum() + " and frag " + header.getFragNum());
+		long ID = ID(header.getSeqNum(), header.getFragNum());
+		int hashMapID = hashMapID(header.getSource());
 		HashMap<Long, Fragment> fragmentsMap = fragments[hashMapID];
 		HashMap<Long, Packet> packetMap = packets[hashMapID];
 		if (!fragmentsMap.containsKey(ID)) {
@@ -41,20 +43,22 @@ public class PacketStorage {
 			fragmentsMap.put(ID, fragment);
 			boolean[] seen = new boolean[4];
 			seen[MyProtocol.getNodeID()] = true;
-			seen[fragment.getSourceID()] = true;
+			seen[header.getSource()] = true;
 			// TODO: Decide whether we will use nextHop as forwarder field instead, so we can fill in 1 more space here.
-			received[hashMapID(fragment.getSourceID())].put(ID, seen);
-			if (!dm || dm && fragment.getDestID() == MyProtocol.getNodeID()) {
-				if (fragment.isFragmented()) {
+			received[hashMapID(header.getSource())].put(ID, seen);
+			if (!dm || dm && header.getDest() == MyProtocol.getNodeID()) {
+				if (header.getFrag()) {
 					FragHandler fragHandler;
-					if (fragHandlerExists(fragment.getSeqNum())) {
-						fragHandler = getFragHandler(fragment.getSeqNum());
+					if (fragHandlerExists(header.getSeqNum())) {
+						fragHandler = getFragHandler(header.getSeqNum());
+						System.out.println(fragHandler);
 						fragHandler.addFragment(fragment);
 					} else {
 						fragHandler = new FragHandler(fragment);
-						Thread fragHandlerThread = new Thread(fragHandler, "Fragmentation handler " + fragment.getSeqNum());
+						System.out.println(fragHandler);
+						addFragHandler(header.getSeqNum(), fragHandler);
+						Thread fragHandlerThread = new Thread(fragHandler, "Fragmentation handler " + header.getSeqNum());
 						fragHandlerThread.start();
-						addFragHandler(fragment.getSeqNum(), fragHandler);
 					}
 				} else {
 					UI.printFragment(fragment);
@@ -66,9 +70,9 @@ public class PacketStorage {
 //			}
 		}
 
-		PacketRetransmitter remover = new PacketRetransmitter(fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID(), this);
-		Thread packetRemoveThread = new Thread(remover, "PacketRemover " + fragment.getSourceID() + " " +
-				fragment.getSeqNum() + " " + fragment.getFragID());
+		PacketRetransmitter remover = new PacketRetransmitter(header.getSource(), header.getSeqNum(), header.getFragNum(), this);
+		Thread packetRemoveThread = new Thread(remover, "PacketRemover " + header.getSource() + " " +
+				header.getSeqNum() + " " + header.getFragNum());
 		packetRemoveThread.start();
 	}
 

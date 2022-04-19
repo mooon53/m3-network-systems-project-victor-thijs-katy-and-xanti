@@ -48,23 +48,24 @@ public class PacketDecoder implements Runnable {
 	public void run() {
 		// separate every part of the header from the first byte
 		String firstByte = byteToString(packetBytes[0]);
-		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
-		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
-		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
-		boolean ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
-		boolean frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
-		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
+		source = Integer.valueOf(firstByte.substring(0, 2), 2);
+		dest = Integer.valueOf(firstByte.substring(2, 4), 2);
+		syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
+		ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
+		System.out.println("frag flag = " + Integer.parseInt(firstByte.substring(6, 7)));
+		frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
+		dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
 		// separate every part of the header from the second byte
 		String secondByte = byteToString(packetBytes[1]);
-		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
+		seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
 		String dataLenPart = secondByte.substring(5, 8);
 
 		// separate every part of the header from the third byte
 		String thirdByte = byteToString(packetBytes[2]);
-		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
-		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
-		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
+		dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
+		nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
+		fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
 
 		// create a header with all the abstracted information
 		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
@@ -75,39 +76,7 @@ public class PacketDecoder implements Runnable {
 		handlePacket();
 	}
 
-	/**
-	 * TEST.
-	 */
-	public void decode() {
-		// separate every part of the header from the first byte
-		String firstByte = byteToString(packetBytes[0]);
-		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
-		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
-		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
-		boolean ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
-		boolean frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
-		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
-		// separate every part of the header from the second byte
-		String secondByte = byteToString(packetBytes[1]);
-		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
-		String dataLenPart = secondByte.substring(5, 8);
-
-		// separate every part of the header from the third byte
-		String thirdByte = byteToString(packetBytes[2]);
-		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
-		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
-		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
-
-		// create a header with all the abstracted information
-		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
-
-		// abstract the actual text data from the packet
-		byte[] messageBytes = new byte[dataLen];
-		System.arraycopy(packetBytes, 3, messageBytes, 0, dataLen);
-		message = new String(messageBytes, StandardCharsets.UTF_8);
-		handlePacket();
-	}
 
 	/**
 	 * Handles a packet according to the information in the header.
@@ -118,8 +87,8 @@ public class PacketDecoder implements Runnable {
 			DebugInterface.printHeaderInformation(header);
 		}
 		Fragment fragment;
-		if (frag) fragment = new Fragment(source, dest, seqNum, fragNum, message);
-		else fragment = new Fragment (source, dest, seqNum, 0, false, message);
+		System.out.println("creating fragment seq " + header.getSeqNum() + " frag " + header.getFragNum() + " fragment flag set to " + header.getFrag());
+		fragment = new Fragment(header, message);
 		packetStorage.addPacket(fragment, packet);
 	}
 
