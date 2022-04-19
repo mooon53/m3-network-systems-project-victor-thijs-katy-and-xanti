@@ -12,7 +12,10 @@ import static control.Client.*;
  * Decodes a packet, converting all the bytes into the needed information.
  */
 public class PacketDecoder implements Runnable {
-	byte[] packet;
+	PacketStorage packetStorage;
+	Packet packet;
+
+	byte[] packetBytes;
 	String message;
 	Header header;
 
@@ -33,8 +36,10 @@ public class PacketDecoder implements Runnable {
 	 *
 	 * @param packet byte array which needs to be decoded
 	 */
-	public PacketDecoder(byte[] packet) {
+	public PacketDecoder(byte[] packetBytes, Packet packet, PacketStorage packetStorage) {
+		this.packetStorage = packetStorage;
 		this.packet = packet;
+		this.packetBytes = packetBytes;
 	}
 
 	/**
@@ -42,7 +47,7 @@ public class PacketDecoder implements Runnable {
 	 */
 	public void run() {
 		// separate every part of the header from the first byte
-		String firstByte = byteToString(packet[0]);
+		String firstByte = byteToString(packetBytes[0]);
 		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
 		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
 		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
@@ -51,12 +56,12 @@ public class PacketDecoder implements Runnable {
 		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
 		// separate every part of the header from the second byte
-		String secondByte = byteToString(packet[1]);
+		String secondByte = byteToString(packetBytes[1]);
 		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
 		String dataLenPart = secondByte.substring(5, 8);
 
 		// separate every part of the header from the third byte
-		String thirdByte = byteToString(packet[2]);
+		String thirdByte = byteToString(packetBytes[2]);
 		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
 		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
 		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
@@ -65,7 +70,7 @@ public class PacketDecoder implements Runnable {
 		header = new Header(source, dest, syn, ack, frag, dm, seqNum, dataLen, nxtHop, fragNum);
 		// abstract the actual text data from the packet
 		byte[] messageBytes = new byte[dataLen];
-		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
+		System.arraycopy(packetBytes, 3, messageBytes, 0, dataLen);
 		message = new String(messageBytes, StandardCharsets.UTF_8);
 		handlePacket();
 	}
@@ -75,7 +80,7 @@ public class PacketDecoder implements Runnable {
 	 */
 	public void decode() {
 		// separate every part of the header from the first byte
-		String firstByte = byteToString(packet[0]);
+		String firstByte = byteToString(packetBytes[0]);
 		int source = Integer.valueOf(firstByte.substring(0, 2), 2);
 		int dest = Integer.valueOf(firstByte.substring(2, 4), 2);
 		boolean syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
@@ -84,12 +89,12 @@ public class PacketDecoder implements Runnable {
 		boolean dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
 		// separate every part of the header from the second byte
-		String secondByte = byteToString(packet[1]);
+		String secondByte = byteToString(packetBytes[1]);
 		int seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
 		String dataLenPart = secondByte.substring(5, 8);
 
 		// separate every part of the header from the third byte
-		String thirdByte = byteToString(packet[2]);
+		String thirdByte = byteToString(packetBytes[2]);
 		int dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
 		int nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
 		int fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
@@ -99,7 +104,7 @@ public class PacketDecoder implements Runnable {
 
 		// abstract the actual text data from the packet
 		byte[] messageBytes = new byte[dataLen];
-		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
+		System.arraycopy(packetBytes, 3, messageBytes, 0, dataLen);
 		message = new String(messageBytes, StandardCharsets.UTF_8);
 		handlePacket();
 	}
@@ -109,10 +114,13 @@ public class PacketDecoder implements Runnable {
 	 */
 	private void handlePacket() {
 		if (MyProtocol.DEBUGGING_MODE) {
-			System.out.println(bytesToString(packet));
+			System.out.println(bytesToString(packetBytes));
 			DebugInterface.printHeaderInformation(header);
 		}
-
+		Fragment fragment;
+		if (frag) fragment = new Fragment(source, seqNum, fragNum, message);
+		else fragment = new Fragment (source, seqNum, 0, false, message);
+		packetStorage.addPacket(fragment, packet);
 
 		// connect the package to a fragmentation handler
 		FragHandler fragHandler = new FragHandler();
@@ -123,9 +131,6 @@ public class PacketDecoder implements Runnable {
 		// if the fragmentation handler does not already has this packet,
 		// we create a fragment for it
 		if (!fragHandler.hasFragment(fragNum)) {
-			Fragment fragment;
-			if (frag) fragment = new Fragment(source, seqNum, fragNum, message);
-			else fragment = new Fragment (source, seqNum, 0, false, message);
 			if (frag && !fragHandlerExists(seqNum)) {
 				// if it is a fragment and the handler does not exist,
 				// then make a new fragment for it
@@ -157,10 +162,10 @@ public class PacketDecoder implements Runnable {
 	 */
 	private void sendPacket(boolean ack) {
 		if (ack) {
-			packet[0] = setBit(packet[0], 5);
+			packetBytes[0] = setBit(packetBytes[0], 5);
 		}
 		//TODO: set all header bits correctly maybe
-		MyProtocol.sendPacket(packet);
+		MyProtocol.sendPacket(packetBytes);
 	}
 
 	/**

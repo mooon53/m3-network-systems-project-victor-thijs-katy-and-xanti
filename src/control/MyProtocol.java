@@ -32,6 +32,7 @@ public class MyProtocol {
 
 	private final Client client;
 	private UI ui;
+	private PacketStorage packetStorage = new PacketStorage();
 
 	private static int nodeID;
 	private int sequenceNumber;
@@ -182,7 +183,7 @@ public class MyProtocol {
 							break;
 						case DATA:
 							// for a data packet, make a packetDecoder
-							PacketDecoder packetDecoder = new PacketDecoder(m.getData().array());
+							PacketDecoder packetDecoder = new PacketDecoder(m.getData().array(), m, packetStorage);
 							// for the decoder, make a messageHandler and start it as a thread
 							Thread messageHandler = new Thread(packetDecoder, "message handler");
 							messageHandler.start();
