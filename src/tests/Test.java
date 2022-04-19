@@ -6,6 +6,8 @@ import java.util.BitSet;
 
 @SuppressWarnings("InvisibleCharacter")
 public class Test {
+	boolean test = true;
+
 	public static void main(String[] args) {
 		byte b = 0x03;
 		String test = new String(new byte[]{b}, StandardCharsets.UTF_8);

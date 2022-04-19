@@ -14,18 +14,18 @@ public class PacketStorage {
 	// A map that maps the Packet to a combination of the sequence number and fragmentation number
 	// For example, sequence 15 and fragmentation 4 would be 01111 00100 = 484
 	// An array so we can store the packet from each sender in their own map
-	private HashMap<Long, Packet>[] packets;
-	private HashMap<Long, Fragment>[] fragments;
-	private HashMap<Long, boolean[]>[] received;
+	private HashMap[] packets;
+	private HashMap[] fragments;
+	private HashMap[] received;
 
 	public PacketStorage() {
-		packets = new HashMap<>[3];
-		fragments = new HashMap<>[3];
-		received = new HashMap<>[3];
+		packets = new HashMap[3];
+		fragments = new HashMap[3];
+		received = new HashMap[3];
 		for (int i = 0; i < 3; i++) {
-			packets[i] = new HashMap<>();
-			fragments[i] = new HashMap<>();
-			received[i] = new HashMap<>();
+			packets[i] = new HashMap<Long, Packet>();
+			fragments[i] = new HashMap<Long, Fragment>();
+			received[i] = new HashMap<Long, boolean[]>();
 		}
 	}
 
@@ -70,7 +70,9 @@ public class PacketStorage {
 	}
 
 	public boolean hasReceived(int receiverID, int nodeID, int seqNum, int fragNum) {
-		return received[hashMapID(nodeID)].get(ID(seqNum, fragNum))[receiverID];
+		HashMap<Long, boolean[]> receivers = received[hashMapID(nodeID)];
+		boolean[] receivedByID = receivers.get(ID(seqNum, fragNum));
+		return receivedByID[receiverID];
 	}
 
 	public int hashMapID(int nodeID) {
