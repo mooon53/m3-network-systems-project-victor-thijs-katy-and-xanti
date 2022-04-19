@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 
 import static control.MyProtocol.DEBUGGING_MODE;
@@ -116,6 +117,7 @@ public class Client {
 
             // create a listener and sender connected to the socket
             listener = new Listener(sock, receivedQueue);
+            sender = new Sender(sock, sendingQueue);
 
             sender.sendConnect(frequency);
 
@@ -163,9 +165,10 @@ public class Client {
          * Works as pure ALOHA, also checking if the line is busy.
          */
         private void senderLoop() {
+            Random random = new Random();
             while (sock.isConnected()) {
                 try {
-                    if (!busy) {
+                    if (!busy && random.nextFloat() < 0.18) {
                         // take a packet from the sending queue
                         Packet msg = sendingQueue.take();
                         if (msg.getType() == PacketType.DATA
