@@ -17,7 +17,7 @@ public class Fragment {
         this.messagePart = message;
     }
 
-    public Fragment( String message) {
+    public Fragment(String message) {
         new Fragment(new Header(), message);
     }
 

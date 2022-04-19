@@ -29,12 +29,24 @@ public class Client {
 
     private int nodeID = 3;
 
-    public static boolean[] inRange = new boolean[]{true, true, true, true};
+    public static boolean[] inRange = new boolean[]{false, false, false, false};
 
     private static HashMap<Integer, FragHandler> fragHandlers = new HashMap();
 
     public BlockingQueue<Packet> getSendingQueue() {
         return sendingQueue;
+    }
+
+    public void resetInRange() {
+        inRange = new boolean[]{false, false, false, false};
+    }
+
+    public void setInRange(int nodeID) {
+        inRange[nodeID] = true;
+    }
+
+    public boolean[] getInRange() {
+        return inRange;
     }
 
     /**
@@ -130,7 +142,7 @@ public class Client {
     }
 
     public void ping(){
-            pingSender = new PingSender(nodeID);
+            pingSender = new PingSender(nodeID, this);
             Thread pingSenderThread = new Thread(pingSender, "ping thread");
             pingSenderThread.start();
         }

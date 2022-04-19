@@ -15,15 +15,18 @@ public class PacketRetransmitter implements Runnable {
 		this.fragNum = fragment;
 		this.attempts = 0;
 		this.succes = false;
+		System.out.println("packet retransmitter started");
 	}
 
 	public void run() {
-		while (!checkReceivers() && attempts < 5) { // TODO: check if everyone in range has received the packet this transmitter was made for
+		while (!checkReceivers() && attempts < 10) { // TODO: check if everyone in range has received the packet this transmitter was made for
 			try {
-				Thread.sleep(10000); // Wait 10 seconds
+				Thread.sleep(5000); // Wait 5 seconds
 			} catch (InterruptedException e) {
 
 			}
+			System.out.println("sleep over, resending");
+			packetStorage.resendPacket(nodeID, seqNum, fragNum);
 			attempts++;
 		}
 		try {

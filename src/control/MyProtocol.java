@@ -32,7 +32,7 @@ public class MyProtocol {
 
 	private final Client client;
 	private UI ui;
-	private PacketStorage packetStorage = new PacketStorage();
+	private PacketStorage packetStorage;
 
 	private static int nodeID;
 	private int sequenceNumber;
@@ -52,6 +52,7 @@ public class MyProtocol {
 		client = new Client(SERVER_IP, SERVER_PORT, frequency, receivedQueue, sendingQueue, nodeID);
 		// start thread to handle received messages!
 		new ReceiveThread(receivedQueue).start();
+		packetStorage = new PacketStorage(client);
 
 		ui = new UI();
 		sequenceNumber = 0;
@@ -95,7 +96,10 @@ public class MyProtocol {
 				PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
 
 				for (byte[] packet : packetEncoder.fragmentedMessage()) {
-					sendPacket(packet);
+					ByteBuffer byteBuffer = ByteBuffer.allocate(packet.length).put(packet);
+					Fragment fragment = new Fragment(standardHeader, input);
+					Packet pack = new Packet(DATA, byteBuffer);
+					packetStorage.addPacket(fragment, pack);
 				}
 				sequenceNumber++;
 				sequenceNumber = sequenceNumber % 32;
@@ -198,7 +202,10 @@ public class MyProtocol {
 							messageHandler.start();
 							break;
 						case DATA_SHORT:
-							// TODO: decide what to do with DATA_SHORT
+							byte b = m.getData().array()[0];
+							String s = byteToString(b).substring(0,2);
+							b = stringToByte(s);
+							client.setInRange(b);
 							break;
 						case DONE_SENDING:
 							break;
