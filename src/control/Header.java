@@ -35,7 +35,7 @@ public class Header {
      * @param fragNum fragmentation number
      */
     public Header(int source, int dest, boolean syn, boolean ack, boolean frag, boolean dm,
-                    int seqNum, int dataLen, int nxtHop, int fragNum) {
+                  int seqNum, int dataLen, int nxtHop, int fragNum) {
         this.source = source;
         this.dest = dest;
         this.syn = syn;
@@ -47,7 +47,6 @@ public class Header {
         this.nxtHop = nxtHop;
         this.fragNum = fragNum;
     }
-
 
 
     /**

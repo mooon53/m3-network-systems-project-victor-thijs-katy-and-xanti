@@ -37,14 +37,27 @@ public class Client {
         return sendingQueue;
     }
 
+    /**
+     * Resets the inRange boolean array.
+     */
     public void resetInRange() {
         inRange = new boolean[]{false, false, false, false};
     }
 
+    /**
+     * Sets the value of a certain nodeID in the inRange array to true.
+     *
+     * @param nodeID the nodeID of which the value should be set to true
+     */
     public void setInRange(int nodeID) {
         inRange[nodeID] = true;
     }
 
+    /**
+     * Returns which nodes are in range.
+     *
+     * @return nodes that are in range
+     */
     public boolean[] getInRange() {
         return inRange;
     }
@@ -141,11 +154,14 @@ public class Client {
         }
     }
 
-    public void ping(){
-            pingSender = new PingSender(nodeID, this);
-            Thread pingSenderThread = new Thread(pingSender, "ping thread");
-            pingSenderThread.start();
-        }
+    /**
+     * Starts a PingSender and a pingSender thread.
+     */
+    public void ping() {
+        pingSender = new PingSender(nodeID, this);
+        Thread pingSenderThread = new Thread(pingSender, "ping thread");
+        pingSenderThread.start();
+    }
 
     /**
      * Checks if the socket is connected.

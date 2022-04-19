@@ -9,7 +9,8 @@ public class Fragment {
 
     /**
      * Constructor for a fragment of a message.
-     * @param header the header
+     *
+     * @param header  the header
      * @param message the header
      */
     public Fragment(Header header, String message) {
@@ -17,10 +18,20 @@ public class Fragment {
         this.messagePart = message;
     }
 
+    /**
+     * Constructor for a fragment with an empty header.
+     *
+     * @param message
+     */
     public Fragment(String message) {
         new Fragment(new Header(), message);
     }
 
+    /**
+     * Gets the header from the fragment object.
+     *
+     * @return header from the fragment object
+     */
     public Header getHeader() {
         return header;
     }
