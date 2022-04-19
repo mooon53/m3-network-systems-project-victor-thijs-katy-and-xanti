@@ -95,6 +95,8 @@ public class MyProtocol {
 				for (byte[] packet : packetEncoder.fragmentedMessage()) {
 					sendPacket(packet);
 				}
+				sequenceNumber++;
+				sequenceNumber = sequenceNumber % 32;
 			}
 		} catch (IOException e) {
 			System.exit(2);
