@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static control.PacketType.DATA;
+import static control.PacketType.*;
 
 /**
  * The implementation of our protocol.
@@ -71,6 +71,8 @@ public class MyProtocol {
 					if (nodeID >= 0 && nodeID <= 3) {
 						gotNodeID = true;
 						nodeID = ID;
+						client.setNodeID(nodeID);
+						client.ping();
 					} else {
 						throw new NumberFormatException("Number must be at least 0 and at most 3");
 					}
@@ -101,7 +103,7 @@ public class MyProtocol {
 		}
 	}
 
-	public static void sendPacket(byte[] packet) {
+	public static void sendPacket(byte[] packet, boolean shortData) {
 		try {
 			// make a new byte buffer in which you put the packet
 			ByteBuffer toSend = ByteBuffer.allocate(packet.length);
@@ -111,11 +113,16 @@ public class MyProtocol {
 			}
 			// TODO: send every so and so, not immediately here
 			Packet msg;
-			msg = new Packet(DATA, toSend);
+			if (shortData) msg = new Packet(DATA_SHORT, toSend);
+			else msg = new Packet(DATA, toSend);
 			sendingQueue.put(msg);
 		} catch (InterruptedException e) {
 			//TODO: decide what to do
 		}
+	}
+
+	public static void sendPacket(byte[] packet) {
+		sendPacket(packet, false);
 	}
 
 	/**
