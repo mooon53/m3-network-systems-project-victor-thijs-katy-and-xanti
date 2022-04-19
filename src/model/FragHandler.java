@@ -11,10 +11,12 @@ import static java.util.Collections.max;
 /**
  * Fragmentation handler object which composes a fragmented message.
  */
+@SuppressWarnings("InvisibleCharacter")
 public class FragHandler implements Runnable {
     private int sourceID;
     private int seqNum;
     private HashMap<Integer, String> fragments = new HashMap<>();
+    private String delimiter = "";
 
     /**
      * Constructor for the fragmentation handler putting the fragment into a storing HashMap.
@@ -67,6 +69,7 @@ public class FragHandler implements Runnable {
             message.append(fragment);
         }
         Message fullMessage = new Message(sourceID, message.toString());
+        fullMessage.removeCharacter(delimiter);
         UI.printMessage(fullMessage);
     }
 
@@ -111,6 +114,6 @@ public class FragHandler implements Runnable {
         int highestID = max(fragments.keySet());
         String lastFragment = fragments.get(highestID);
         // DON'T REMOVE "", it is a special character we actually use
-        return lastFragment.endsWith("") && highestID + 1 == fragments.size();
+        return lastFragment.endsWith(delimiter) && fragments.size() == highestID + 1;
     }
 }

@@ -18,6 +18,11 @@ public class Message {
         this.message = message;
     }
 
+    public Message(Fragment fragment) {
+        this.sourceID = fragment.getSourceID();
+        this.message = fragment.getMessagePart();
+    }
+
     /**
      * Takes the information from a message and turns it to a layout string.
      *
@@ -34,5 +39,9 @@ public class Message {
      */
     public int getSourceID() {
         return sourceID;
+    }
+
+    public void removeCharacter(String character) {
+        message = message.replace(character, "");
     }
 }

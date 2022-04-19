@@ -1,5 +1,6 @@
 package view;
 
+import control.Fragment;
 import control.Message;
 import control.MyProtocol;
 
@@ -22,6 +23,13 @@ public class UI {
 		}
 		System.out.println("[" + message.getSourceID() + "]: " + message);
 	}
+
+	public static void printFragment(Fragment fragment) {
+		Message message = new Message(fragment);
+		printMessage(message);
+	}
+
+
 
 	/**
 	 * Asks for an input from the user.

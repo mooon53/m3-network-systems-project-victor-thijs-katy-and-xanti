@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
 import static control.MyProtocol.DEBUGGING_MODE;
-import static utils.HelpFunc.*;
 import static view.DebugInterface.printPacket;
 
 import model.*;
@@ -26,7 +25,9 @@ public class Client {
 
     private int nodeID = 3;
 
-    private static HashMap<Integer, FragHandler> receivedMessages = new HashMap();
+    public static boolean[] inRange = new boolean[]{true, true, true, true};
+
+    private static HashMap<Integer, FragHandler> fragHandlers = new HashMap();
 
     /**
      * Gets a FragmentHandler by its sequence number.
@@ -35,7 +36,7 @@ public class Client {
      * @return FragmentHandler corresponding to the sequence number
      */
     public static FragHandler getFragHandler(int seqNum) {
-        return receivedMessages.get(seqNum);
+        return fragHandlers.get(seqNum);
     }
 
     /**
@@ -45,7 +46,7 @@ public class Client {
      * @return true if the FragHandler corresponding to the given sequence number exists
      */
     public static boolean fragHandlerExists(int seqNum) {
-        return receivedMessages.containsKey(seqNum);
+        return fragHandlers.containsKey(seqNum);
     }
 
     /**
@@ -55,7 +56,7 @@ public class Client {
      * @param fragHandler FragHandler which needs to be added to the receivedMessages HashMap
      */
     public static void addFragHandler(int seqNum, FragHandler fragHandler) {
-        receivedMessages.put(seqNum, fragHandler);
+        fragHandlers.put(seqNum, fragHandler);
         // TODO: store the FragmentHandlers differently,
         //  since we only store by sequence number and this is not unique
     }
@@ -64,7 +65,7 @@ public class Client {
      * Resets the HashMap of all receivedMessages.
      */
     public static void resetReceivedMessages() {
-        receivedMessages = new HashMap<>();
+        fragHandlers = new HashMap<>();
     }
 
     /**

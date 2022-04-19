@@ -9,6 +9,7 @@ public class Packet {
     private PacketType type;
     private ByteBuffer data;
 
+
     /**
      * Packet constructor given only a type.
      *

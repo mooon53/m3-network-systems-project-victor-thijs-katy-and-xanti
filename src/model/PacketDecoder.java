@@ -3,9 +3,7 @@ package model;
 import control.*;
 import view.*;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static utils.HelpFunc.*;
 import static control.Client.*;
@@ -69,7 +67,7 @@ public class PacketDecoder implements Runnable {
 		byte[] messageBytes = new byte[dataLen];
 		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
 		message = new String(messageBytes, StandardCharsets.UTF_8);
-		handlePackage();
+		handlePacket();
 	}
 
 	/**
@@ -103,17 +101,19 @@ public class PacketDecoder implements Runnable {
 		byte[] messageBytes = new byte[dataLen];
 		System.arraycopy(packet, 3, messageBytes, 0, dataLen);
 		message = new String(messageBytes, StandardCharsets.UTF_8);
-		handlePackage();
+		handlePacket();
 	}
 
 	/**
 	 * Handles a packet according to the information in the header.
 	 */
-	private void handlePackage() {
+	private void handlePacket() {
 		if (MyProtocol.DEBUGGING_MODE) {
 			System.out.println(bytesToString(packet));
 			DebugInterface.printHeaderInformation(header);
 		}
+
+
 		// connect the package to a fragmentation handler
 		FragHandler fragHandler = new FragHandler();
 		if (fragHandlerExists(seqNum)) {
@@ -123,7 +123,9 @@ public class PacketDecoder implements Runnable {
 		// if the fragmentation handler does not already has this packet,
 		// we create a fragment for it
 		if (!fragHandler.hasFragment(fragNum)) {
-			Fragment fragment = new Fragment(source, seqNum, fragNum, message);
+			Fragment fragment;
+			if (frag) fragment = new Fragment(source, seqNum, fragNum, message);
+			else fragment = new Fragment (source, seqNum, 0, false, message);
 			if (frag && !fragHandlerExists(seqNum)) {
 				// if it is a fragment and the handler does not exist,
 				// then make a new fragment for it
@@ -157,13 +159,8 @@ public class PacketDecoder implements Runnable {
 		if (ack) {
 			packet[0] = setBit(packet[0], 5);
 		}
-		// make a new byte buffer with the length of the input string
-		ByteBuffer toSend = ByteBuffer.allocate(dataLen + 3);
-		// copy the input string into the byte buffer
-		toSend.put(packet, 0, dataLen + 3);
-		Packet msg;
-		msg = new Packet(PacketType.DATA, toSend);
-		MyProtocol.sendMessage(msg);
+		//TODO: set all header bits correctly maybe
+		MyProtocol.sendPacket(packet);
 	}
 
 	/**

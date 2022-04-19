@@ -4,10 +4,11 @@ package control;
  * Fragment object which is a fragment of a message.
  */
 public class Fragment {
-    int sourceID;
-    int seqNum;
-    int fragID;
-    String messagePart;
+    private int sourceID;
+    private int seqNum;
+    private int fragID;
+    private boolean fragmented;
+    private String messagePart;
 
     /**
      * Constructor for a fragment of a message.
@@ -17,11 +18,16 @@ public class Fragment {
      * @param fragID   fragmentation number of the packet
      * @param message  string containing the decoded message data
      */
-    public Fragment(int sourceID, int seqNum, int fragID, String message) {
+    public Fragment(int sourceID, int seqNum, int fragID, boolean fragged, String message) {
         this.sourceID = sourceID;
         this.seqNum = seqNum;
         this.fragID = fragID;
+        this.fragmented = fragged;
         this.messagePart = message;
+    }
+
+    public Fragment(int sourceID, int seqNum, int fragID, String message) {
+        new Fragment(sourceID, seqNum, fragID, true, message);
     }
 
     /**
@@ -49,6 +55,10 @@ public class Fragment {
      */
     public int getFragID() {
         return fragID;
+    }
+
+    public boolean isFragmented() {
+        return fragmented;
     }
 
     /**
