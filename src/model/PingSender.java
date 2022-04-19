@@ -21,7 +21,7 @@ public class PingSender implements Runnable{
 	public void run() {
 		while (true) {
 			try {
-				Thread.sleep(15000);
+				Thread.sleep(60000);
 			} catch (InterruptedException e) {
 
 			}
