@@ -45,12 +45,21 @@ public class Client {
     }
 
     /**
+     * Sets the value of a certain nodeID in the inRange array to the specified value.
+     * @param nodeID the nodeID of which the value should be set
+     * @param set the value it should be set to
+     */
+    public void setInRange(int nodeID, boolean set) {
+        inRange[nodeID] = set;
+    }
+
+    /**
      * Sets the value of a certain nodeID in the inRange array to true.
      *
      * @param nodeID the nodeID of which the value should be set to true
      */
     public void setInRange(int nodeID) {
-        inRange[nodeID] = true;
+        setInRange(nodeID, true);
     }
 
     /**
