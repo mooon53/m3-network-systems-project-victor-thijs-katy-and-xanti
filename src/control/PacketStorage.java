@@ -1,9 +1,11 @@
 package control;
 
+import model.FragHandler;
 import view.UI;
 
 import java.util.HashMap;
 
+import static control.Client.*;
 import static utils.HelpFunc.*;
 
 /**
@@ -29,7 +31,7 @@ public class PacketStorage {
 		}
 	}
 
-	public void addPacket(Fragment fragment, Packet packet) {
+	public void addPacket(Fragment fragment, Packet packet, boolean dm) {
 		long ID = ID(fragment.getSeqNum(), fragment.getFragID());
 		int hashMapID = hashMapID(fragment.getSourceID());
 		HashMap<Long, Fragment> fragmentsMap = fragments[hashMapID];
@@ -42,16 +44,36 @@ public class PacketStorage {
 			seen[fragment.getSourceID()] = true;
 			// TODO: Decide whether we will use nextHop as forwarder field instead, so we can fill in 1 more space here.
 			received[hashMapID(fragment.getSourceID())].put(ID, seen);
-			if (!fragment.isFragmented()) UI.printFragment(fragment);
+			if (!dm || dm && fragment.getDestID() == MyProtocol.getNodeID()) {
+				if (fragment.isFragmented()) {
+					FragHandler fragHandler;
+					if (fragHandlerExists(fragment.getSeqNum())) {
+						fragHandler = getFragHandler(fragment.getSeqNum());
+						fragHandler.addFragment(fragment);
+					} else {
+						fragHandler = new FragHandler(fragment);
+						Thread fragHandlerThread = new Thread(fragHandler, "Fragmentation handler " + fragment.getSeqNum());
+						fragHandlerThread.start();
+						addFragHandler(fragment.getSeqNum(), fragHandler);
+					}
+				} else {
+					UI.printFragment(fragment);
+				}
+			}
 		} else {
 //			if (!hasReceived(forwarder, fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID())) {
 //				received[fragment.getSourceID()].get(ID)[forwarder] = true;
 //			}
 		}
+
 		PacketRetransmitter remover = new PacketRetransmitter(fragment.getSourceID(), fragment.getSeqNum(), fragment.getFragID(), this);
 		Thread packetRemoveThread = new Thread(remover, "PacketRemover " + fragment.getSourceID() + " " +
 				fragment.getSeqNum() + " " + fragment.getFragID());
 		packetRemoveThread.start();
+	}
+
+	public void addPacket(Fragment fragment, Packet packet) {
+		addPacket(fragment, packet, false);
 	}
 
 	public void removePacket(int nodeID, int seqNum, int fragNum) {

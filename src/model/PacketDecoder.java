@@ -118,41 +118,9 @@ public class PacketDecoder implements Runnable {
 			DebugInterface.printHeaderInformation(header);
 		}
 		Fragment fragment;
-		if (frag) fragment = new Fragment(source, seqNum, fragNum, message);
-		else fragment = new Fragment (source, seqNum, 0, false, message);
+		if (frag) fragment = new Fragment(source, dest, seqNum, fragNum, message);
+		else fragment = new Fragment (source, dest, seqNum, 0, false, message);
 		packetStorage.addPacket(fragment, packet);
-
-		// connect the package to a fragmentation handler
-		FragHandler fragHandler = new FragHandler();
-		if (fragHandlerExists(seqNum)) {
-			fragHandler = getFragHandler(seqNum);
-		}
-		// TODO: make this check if we've received the message before
-		// if the fragmentation handler does not already has this packet,
-		// we create a fragment for it
-		if (!fragHandler.hasFragment(fragNum)) {
-			if (frag && !fragHandlerExists(seqNum)) {
-				// if it is a fragment and the handler does not exist,
-				// then make a new fragment for it
-				fragHandler = new FragHandler(fragment);
-				Thread fragHandlerThread = new Thread(fragHandler);
-				fragHandlerThread.start();
-				addFragHandler(seqNum, fragHandler);
-			} else if (frag) {
-				// else if it is a fragment and the handler already exists,
-				// then pass it to that fragHandler
-				getFragHandler(seqNum).addFragment(fragment);
-			} else if (!dm) {
-				// if it is not a fragment and not a direct message,
-				// then we can make it a full message and print it
-				Message fullMessage = new Message(source, message);
-				UI.printMessage(fullMessage);
-			}
-		}
-		// TODO: add a condition to check if all reachable nodes have received this packet
-		if (true) {
-			sendPacket();
-		}
 	}
 
 	/**

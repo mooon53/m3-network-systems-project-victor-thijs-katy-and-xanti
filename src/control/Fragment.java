@@ -5,6 +5,7 @@ package control;
  */
 public class Fragment {
     private int sourceID;
+    private int destID;
     private int seqNum;
     private int fragID;
     private boolean fragmented;
@@ -18,7 +19,7 @@ public class Fragment {
      * @param fragID   fragmentation number of the packet
      * @param message  string containing the decoded message data
      */
-    public Fragment(int sourceID, int seqNum, int fragID, boolean fragged, String message) {
+    public Fragment(int sourceID, int destID, int seqNum, int fragID, boolean fragged, String message) {
         this.sourceID = sourceID;
         this.seqNum = seqNum;
         this.fragID = fragID;
@@ -26,8 +27,8 @@ public class Fragment {
         this.messagePart = message;
     }
 
-    public Fragment(int sourceID, int seqNum, int fragID, String message) {
-        new Fragment(sourceID, seqNum, fragID, true, message);
+    public Fragment(int sourceID, int destID, int seqNum, int fragID, String message) {
+        new Fragment(sourceID, destID, seqNum, fragID, true, message);
     }
 
     /**
@@ -37,6 +38,10 @@ public class Fragment {
      */
     public int getSourceID() {
         return sourceID;
+    }
+
+    public int getDestID() {
+        return destID;
     }
 
     /**

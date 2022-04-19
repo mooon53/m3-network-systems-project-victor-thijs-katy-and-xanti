@@ -25,11 +25,17 @@ public class PacketRetransmitter implements Runnable {
 
 			}
 			checkReceivers(); // Checks if everyone in range has received the packet
+			attempts++;
+		}
+		try {
+			Thread.sleep(60000);
+		} catch (InterruptedException e) {
+
 		}
 		packetStorage.removePacket(nodeID, seqNum, fragNum);
 	}
 
-	public void checkReceivers() {
+	public boolean checkReceivers() {
 		int inRangeClients = 0;
 		int receivedClients = 0;
 		for (int i = 0; i < 4; i++) {
@@ -40,6 +46,6 @@ public class PacketRetransmitter implements Runnable {
 				}
 			}
 		}
-		if (inRangeClients==receivedClients) succes = true;
+		return inRangeClients == receivedClients;
 	}
 }
