@@ -18,6 +18,10 @@ public class Message {
         this.message = message;
     }
 
+    /**
+     * Constructor for a message with a fragment as input.
+     * @param fragment fragment for which a message should be created.
+     */
     public Message(Fragment fragment) {
         this.sourceID = fragment.getHeader().getSource();
         this.message = fragment.getMessagePart();
@@ -41,6 +45,10 @@ public class Message {
         return sourceID;
     }
 
+    /**
+     * Removes a character from the actual data text.
+     * @param character character that should be removed
+     */
     public void removeCharacter(String character) {
         message = message.replace(character, "");
     }
