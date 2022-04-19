@@ -18,13 +18,12 @@ public class PacketRetransmitter implements Runnable {
 	}
 
 	public void run() {
-		while (!succes && attempts < 5) { // TODO: check if everyone in range has received the packet this transmitter was made for
+		while (!checkReceivers() && attempts < 5) { // TODO: check if everyone in range has received the packet this transmitter was made for
 			try {
 				Thread.sleep(10000); // Wait 10 seconds
 			} catch (InterruptedException e) {
 
 			}
-			checkReceivers(); // Checks if everyone in range has received the packet
 			attempts++;
 		}
 		try {
