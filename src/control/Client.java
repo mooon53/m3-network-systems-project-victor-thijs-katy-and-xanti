@@ -37,16 +37,6 @@ public class Client {
         return sendingQueue;
     }
 
-    private InRangeChecker[] inRangeCheckers = new InRangeChecker[4];
-
-    /**
-     * Returns the InRangeChecker object array.
-     * @return array of InRangeChecker objects
-     */
-    public InRangeChecker[] getInRangeCheckers() {
-        return inRangeCheckers;
-    }
-
     /**
      * Resets the inRange boolean array.
      */

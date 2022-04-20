@@ -24,7 +24,7 @@ public class PingListener implements Runnable {
 	public void run() {
 		try {
 			Thread.sleep(60000); // Wait 60 seconds
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException e) { }
 		if (!disable) client.setInRange(nodeID, false); // If it hasn't been disabled yet, set the node to unreachable
 	}
 
