@@ -84,6 +84,14 @@ public class MyProtocol {
 				}
 			}
 
+			// TODO: review this
+			InRangeChecker inRangeChecker;
+			for (int i = 0; i < 4; i++) {
+				inRangeChecker = new InRangeChecker(i, true);
+				inRangeChecker.startThread();
+				client.getInRangeCheckers()[i] = inRangeChecker;
+			}
+
 			// handle sending from System.in from this thread
 			while (!br.ready()) {
 				// read input
@@ -221,14 +229,20 @@ public class MyProtocol {
 							byte b = m.getData().array()[0];
 							String s = byteToString(b).substring(0, 2);
 							b = stringToByte(s);
-							client.setInRange(b);
-							if (pingListeners[b] != null) { // If the PingListener for the node exists
-								pingListeners[b].disable(); // Disable it (so it doesn't set the node to unreachable)
+//							client.setInRange(b);
+//							if (pingListeners[b] != null) { // If the PingListener for the node exists
+//								pingListeners[b].disable(); // Disable it (so it doesn't set the node to unreachable)
+//							}
+//							PingListener pingListener = new PingListener(b, client); // Create new PingListener
+//							Thread pingListenerThread = new Thread(pingListener, "Ping listener for node " + b); // Create new thread to run it in
+//							pingListeners[b] = pingListener; // Add PingListener to the list of PingListener with the index being the node's id
+//							pingListenerThread.start(); // Start PingListener thread
+
+							// TODO: review this
+							client.getInRangeCheckers()[b].resetTimer();
+							for (int i = 0; i < 4; i++) {
+								client.setInRange(i, client.getInRangeCheckers()[i].getInRange());
 							}
-							PingListener pingListener = new PingListener(b, client); // Create new PingListener
-							Thread pingListenerThread = new Thread(pingListener, "Ping listener for node " + b); // Create new thread to run it in
-							pingListeners[b] = pingListener; // Add PingListener to the list of PingListener with the index being the node's id
-							pingListenerThread.start(); // Start PingListener thread
 							break;
 						case DONE_SENDING:
 							break;
