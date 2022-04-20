@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -222,6 +223,7 @@ public class MyProtocol {
 							String s = byteToString(b).substring(0, 2);
 							b = stringToByte(s);
 							client.setInRange(b);
+							if (DEBUGGING_MODE) System.out.println(Arrays.toString(client.getInRange()));
 							if (pingListeners[b] != null) { // If the PingListener for the node exists
 								pingListeners[b].disable(); // Disable it (so it doesn't set the node to unreachable)
 							}

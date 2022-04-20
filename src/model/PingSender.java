@@ -30,12 +30,9 @@ public class PingSender implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(15000);
-            } catch (InterruptedException e) {
-
-            }
+                Thread.sleep(20000);
+            } catch (InterruptedException e) { }
             System.out.println("ping");
-            System.out.println(Arrays.toString(client.getInRange()));
             sendPacket(ping.toBytes(), true);
         }
     }

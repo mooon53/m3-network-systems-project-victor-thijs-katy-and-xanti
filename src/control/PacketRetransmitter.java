@@ -31,42 +31,20 @@ public class PacketRetransmitter implements Runnable {
      */
     public void run() {
         // TODO: check if everyone in range has received the packet this transmitter was made for
-        while (!checkReceivers() && attempts < 10) {
-            try {
-                Thread.sleep(5000); // Wait 5 seconds
-            } catch (InterruptedException e) {
-
-            }
-            System.out.println("sleep over, resending");
-            packetStorage.resendPacket(nodeID, seqNum, fragNum);
-            attempts++;
-        }
+        boolean received = false;
         try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-
-        }
-        packetStorage.removePacket(nodeID, seqNum, fragNum);
-    }
-
-    /**
-     * Checks whether everyone in range has sent an acknowledgement.
-     *
-     * @return true if everyone in range has sent an acknowledgement
-     */
-    public boolean checkReceivers() {
-        int inRangeClients = 0;
-        int receivedClients = 0;
-        for (int i = 0; i < 4; i++) {
-            if (Client.inRange[i]) {
-                inRangeClients++;
-                if (packetStorage.hasPacket(nodeID, seqNum, fragNum)) {
-                    if (packetStorage.hasReceived(i, nodeID, seqNum, fragNum)) {
-                        receivedClients++;
-                    }
-                }
+            while (!received) {
+                Thread.sleep(10000); // Wait 10 seconds
+                if (!packetStorage.checkReceivers(nodeID, seqNum, fragNum) && attempts < 10) {
+                    System.out.println("Not everyone received, starting sleep");
+                    System.out.println("sleep over, resending");
+                    packetStorage.resendPacket(nodeID, seqNum, fragNum);
+                    attempts++;
+                } else received = true;
             }
-        }
-        return inRangeClients == receivedClients;
+            System.out.println("everyone has received this packet");
+            Thread.sleep(60000);
+            packetStorage.removePacket(nodeID, seqNum, fragNum);
+        } catch (InterruptedException e) { }
     }
 }

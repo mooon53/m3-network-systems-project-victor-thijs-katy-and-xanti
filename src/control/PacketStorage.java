@@ -4,6 +4,7 @@ import model.FragHandler;
 import view.UI;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static control.Client.*;
@@ -64,8 +65,7 @@ public class PacketStorage {
             boolean[] seen = new boolean[4];
             seen[MyProtocol.getNodeID()] = true;
             seen[header.getSource()] = true;
-            // TODO: Decide whether we will use nextHop as forwarder field instead,
-            //  so we can fill in 1 more space here.
+            seen[header.getNxtHop()] = true;
             received[header.getSource()].put(id, seen);
             if (!dm || dm && header.getDest() == MyProtocol.getNodeID()) {
                 if (header.getFrag()) {
@@ -95,14 +95,16 @@ public class PacketStorage {
             byte[] newDataBytes = new byte[dataBytes.length - Header.HEADER_LENGTH];
             System.arraycopy(dataBytes, 3, newDataBytes, 0, header.getDataLen());
             ByteBuffer byteBuffer = ByteBuffer.allocate(headerBytes.length + dataBytes.length)
-                    .put(headerBytes).put(dataBytes);
+                    .put(headerBytes).put(newDataBytes);
             Packet newPacket = new Packet(DATA, byteBuffer);
             sendMessage(newPacket);
         } else {
             HashMap map = received[header.getSource()];
             boolean[] bools = (boolean[]) map.get(id(header.getSeqNum(), header.getFragNum()));
             bools[header.getNxtHop()] = true;
-            resendPacket(header.getSource(), header.getSeqNum(), header.getFragNum());
+            received[header.getSource()].put(id, bools);
+            System.out.println(Arrays.toString(bools));
+            if (!checkReceivers(header.getSource(), header.getSeqNum(), header.getFragNum())) resendPacket(header.getSource(), header.getSeqNum(), header.getFragNum());
         }
 
 
@@ -197,20 +199,20 @@ public class PacketStorage {
         long id = Long.valueOf(sequence + frag, 2);
         return id;
     }
+
+    /**
+     * Checks whether everyone in range has sent an acknowledgement.
+     * @param sourceID the source of the packet you want to check
+     * @param seqNum the sequence number of the packet you want to check
+     * @param fragNum the fragment number of the packet you want to check
+     * @return true if everyone in range has sent an acknowledgement
+     */
+    public boolean checkReceivers(int sourceID, int seqNum, int fragNum) {
+        for (int i = 0; i < 4; i++) {
+            if (Client.inRange[i]) {
+                if (!hasReceived(i, sourceID, seqNum, fragNum)) return false;
+            }
+        }
+        return true;
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
