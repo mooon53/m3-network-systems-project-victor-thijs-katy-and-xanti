@@ -1,7 +1,6 @@
 package control;
 
-import static utils.HelpFunc.padString;
-import static utils.HelpFunc.stringToByte;
+import static utils.HelpFunc.*;
 
 /**
  * Header object containing information and can be exported to byte array.
@@ -46,6 +45,28 @@ public class Header {
         this.dataLen = dataLen;
         this.nxtHop = nxtHop;
         this.fragNum = fragNum;
+    }
+
+    public Header(byte[] headerBytes) {
+        String firstByte = byteToString(headerBytes[0]);
+        source = Integer.valueOf(firstByte.substring(0, 2), 2);
+        dest = Integer.valueOf(firstByte.substring(2, 4), 2);
+        syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
+        ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
+        System.out.println("frag flag = " + Integer.parseInt(firstByte.substring(6, 7)));
+        frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
+        dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
+
+        // separate every part of the header from the second byte
+        String secondByte = byteToString(headerBytes[1]);
+        seqNum = Integer.valueOf(secondByte.substring(0, 5), 2);
+        String dataLenPart = secondByte.substring(5, 8);
+
+        // separate every part of the header from the third byte
+        String thirdByte = byteToString(headerBytes[2]);
+        dataLen = Integer.valueOf(dataLenPart + thirdByte.substring(0, 2), 2);
+        nxtHop = Integer.valueOf(thirdByte.substring(2, 4), 2);
+        fragNum = Integer.valueOf(thirdByte.substring(4, 8), 2);
     }
 
 

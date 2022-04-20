@@ -53,7 +53,7 @@ public class PacketStorage {
     public void addPacket(Fragment fragment, Packet packet) {
         boolean dm = fragment.getHeader().getDm();
         Header header = fragment.getHeader();
-        System.out.println("Packet added to packet storage seq "
+        if (DEBUGGING_MODE) System.out.println("Packet added to packet storage seq "
                 + header.getSeqNum() + " and frag " + header.getFragNum());
         long id = id(header.getSeqNum(), header.getFragNum());
         int hashMapID = header.getSource();
@@ -72,11 +72,11 @@ public class PacketStorage {
                     FragHandler fragHandler;
                     if (fragHandlerExists(header.getSeqNum())) {
                         fragHandler = getFragHandler(header.getSeqNum());
-                        System.out.println(fragHandler);
+                        if (DEBUGGING_MODE) System.out.println(fragHandler);
                         fragHandler.addFragment(fragment);
                     } else {
                         fragHandler = new FragHandler(fragment);
-                        System.out.println(fragHandler);
+                        if (DEBUGGING_MODE) System.out.println(fragHandler);
                         addFragHandler(header.getSeqNum(), fragHandler);
                         Thread fragHandlerThread = new Thread(fragHandler, "Fragmentation handler "
                                 + header.getSeqNum());
@@ -94,7 +94,7 @@ public class PacketStorage {
             byte[] dataBytes = packet.getData().array();
             byte[] newDataBytes = new byte[dataBytes.length - Header.HEADER_LENGTH];
             System.arraycopy(dataBytes, 3, newDataBytes, 0, header.getDataLen());
-            ByteBuffer byteBuffer = ByteBuffer.allocate(headerBytes.length + dataBytes.length)
+            ByteBuffer byteBuffer = ByteBuffer.allocate(dataBytes.length)
                     .put(headerBytes).put(newDataBytes);
             Packet newPacket = new Packet(DATA, byteBuffer);
             sendMessage(newPacket);
@@ -103,7 +103,7 @@ public class PacketStorage {
             boolean[] bools = (boolean[]) map.get(id(header.getSeqNum(), header.getFragNum()));
             bools[header.getNxtHop()] = true;
             received[header.getSource()].put(id, bools);
-            System.out.println(Arrays.toString(bools));
+            if (DEBUGGING_MODE) System.out.println(Arrays.toString(bools));
             if (!checkReceivers(header.getSource(), header.getSeqNum(), header.getFragNum())) resendPacket(header.getSource(), header.getSeqNum(), header.getFragNum());
         }
 
@@ -125,14 +125,15 @@ public class PacketStorage {
     public void resendPacket(int nodeID, int seqNum, int fragNum) {
         Fragment fragment = (Fragment) fragments[nodeID].get(id(seqNum, fragNum));
         Packet packet = (Packet) packets[nodeID].get(id(seqNum, fragNum));
-        byte[] headerBytes = fragment.getHeader().toByteArray();
-        byte[] dataBytes = packet.getData().array();
-        byte[] newDataBytes = new byte[dataBytes.length - Header.HEADER_LENGTH];
-        System.arraycopy(dataBytes, 3, newDataBytes, 0, fragment.getHeader().getDataLen());
-        ByteBuffer byteBuffer = ByteBuffer.allocate(headerBytes.length + dataBytes.length)
-                .put(headerBytes).put(dataBytes);
-        Packet newPacket = new Packet(DATA, byteBuffer);
-        sendMessage(newPacket);
+        Header header = fragment.getHeader();
+        header.setNxtHop(client.getNodeID());
+        byte[] newData = new byte[32];
+        System.arraycopy(header.toByteArray(), 0, newData, 0, 3);
+        byte[] packetData = packet.getData().array();
+        int dataLength = header.getDataLen();
+        System.arraycopy(packetData, 3, newData, 3, dataLength);
+        packet.setData(newData);
+        sendMessage(packet);
     }
 
     /**

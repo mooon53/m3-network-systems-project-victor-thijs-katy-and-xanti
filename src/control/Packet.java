@@ -47,4 +47,13 @@ public class Packet {
     public ByteBuffer getData() {
         return data;
     }
+
+    public void setData(ByteBuffer data) {
+        this.data = data;
+    }
+
+    public void setData(byte[] data) {
+        ByteBuffer bb = ByteBuffer.allocate(data.length).put(data);
+        setData(bb);
+    }
 }

@@ -5,6 +5,7 @@ import view.*;
 
 import java.nio.charset.StandardCharsets;
 
+import static control.MyProtocol.DEBUGGING_MODE;
 import static utils.HelpFunc.*;
 import static control.Client.*;
 
@@ -52,7 +53,7 @@ public class PacketDecoder implements Runnable {
         dest = Integer.valueOf(firstByte.substring(2, 4), 2);
         syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
         ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
-        System.out.println("frag flag = " + Integer.parseInt(firstByte.substring(6, 7)));
+        if (DEBUGGING_MODE) System.out.println("frag flag = " + Integer.parseInt(firstByte.substring(6, 7)));
         frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
         dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
@@ -80,12 +81,11 @@ public class PacketDecoder implements Runnable {
      * Handles a packet according to the information in the header.
      */
     private void handlePacket() {
-        if (MyProtocol.DEBUGGING_MODE) {
+        if (DEBUGGING_MODE) {
             System.out.println(bytesToString(packetBytes));
-            DebugInterface.printHeaderInformation(header);
+            System.out.println("creating fragment seq " + header.getSeqNum() + " frag " + header.getFragNum() + " fragment flag set to " + header.getFrag());
         }
         Fragment fragment;
-        System.out.println("creating fragment seq " + header.getSeqNum() + " frag " + header.getFragNum() + " fragment flag set to " + header.getFrag());
         fragment = new Fragment(header, message);
         packetStorage.addPacket(fragment, packet);
     }

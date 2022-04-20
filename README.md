@@ -29,10 +29,10 @@ devices). The app runs on a single sound channel (frequency = 1400Hz).
 
 ##Authors
 
-Thijs Frauenfelder : s2739127 : 
+Thijs Frauenfelder : s2739127 : t.frauenfelder@student.utwente.nl
 
-Xanti Lizanzu : s2829541 :
+Xanti Lizanzu : s2829541 : x.l.lizanzu@student.utwente.nl
 
-Victor Zugravu : s2780941 :
+Victor Zugravu : s2780941 : v.zugravu@student.utwente.nl
 
 Katy Radzkova : s2646749 : k.radzkova@student.utwente.nl

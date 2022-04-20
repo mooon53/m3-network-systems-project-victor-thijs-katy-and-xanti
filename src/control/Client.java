@@ -167,7 +167,7 @@ public class Client {
      * Starts a PingSender and a pingSender thread.
      */
     public void ping() {
-        pingSender = new PingSender(nodeID, this);
+        pingSender = new PingSender(nodeID, this, 30000);
         Thread pingSenderThread = new Thread(pingSender, "ping thread");
         pingSenderThread.start();
     }

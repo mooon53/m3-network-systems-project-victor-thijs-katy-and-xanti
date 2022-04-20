@@ -1,5 +1,7 @@
 package control;
 
+import static control.MyProtocol.DEBUGGING_MODE;
+
 public class PacketRetransmitter implements Runnable {
     private PacketStorage packetStorage;
     private int nodeID;
@@ -23,7 +25,7 @@ public class PacketRetransmitter implements Runnable {
         this.fragNum = fragment;
         this.attempts = 0;
         this.succes = false;
-        System.out.println("packet retransmitter started");
+        if (DEBUGGING_MODE) System.out.println("packet retransmitter started");
     }
 
     /**
@@ -34,15 +36,15 @@ public class PacketRetransmitter implements Runnable {
         boolean received = false;
         try {
             while (!received) {
-                Thread.sleep(10000); // Wait 10 seconds
+                if (DEBUGGING_MODE) System.out.println("Not everyone received, starting sleep");
+                Thread.sleep(5000); // Wait 10 seconds
                 if (!packetStorage.checkReceivers(nodeID, seqNum, fragNum) && attempts < 10) {
-                    System.out.println("Not everyone received, starting sleep");
-                    System.out.println("sleep over, resending");
+                    if (DEBUGGING_MODE) System.out.println("sleep over, resending");
                     packetStorage.resendPacket(nodeID, seqNum, fragNum);
                     attempts++;
                 } else received = true;
             }
-            System.out.println("everyone has received this packet");
+            if (DEBUGGING_MODE) System.out.println("everyone has received this packet");
             Thread.sleep(60000);
             packetStorage.removePacket(nodeID, seqNum, fragNum);
         } catch (InterruptedException e) { }

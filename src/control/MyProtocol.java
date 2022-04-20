@@ -40,7 +40,7 @@ public class MyProtocol {
 
 	private PingListener[] pingListeners = new PingListener[4];
 
-	public static final boolean DEBUGGING_MODE = true;
+	public static final boolean DEBUGGING_MODE = false;
 
 	/**
 	 * Constructor of the protocol, starting a client,
@@ -97,11 +97,16 @@ public class MyProtocol {
 				Header standardHeader = new Header(nodeID, 0, false, false, false, false,
 						sequenceNumber, 0, nodeID, 0);
 				PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
-
-				for (byte[] packet : packetEncoder.fragmentedMessage()) {
+				if (DEBUGGING_MODE) System.out.println(Arrays.deepToString(packetEncoder.fragmentedMessage()));
+				byte[][] fragments = packetEncoder.fragmentedMessage();
+				for (byte[] packet : fragments) {
 					ByteBuffer byteBuffer = ByteBuffer.allocate(packet.length).put(packet);
-					Fragment fragment = new Fragment(standardHeader, input);
+					byte[] headerBytes = new byte[3];
+					System.arraycopy(packet, 0, headerBytes, 0, 3);
+					Header tempHeader = new Header(headerBytes);
+					Fragment fragment = new Fragment(tempHeader, input);
 					Packet pack = new Packet(DATA, byteBuffer);
+					if (DEBUGGING_MODE) System.out.println(Arrays.toString(byteBuffer.array()));
 					packetStorage.addPacket(fragment, pack);
 				}
 				sequenceNumber++;

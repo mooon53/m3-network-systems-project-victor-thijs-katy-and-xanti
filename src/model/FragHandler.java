@@ -6,6 +6,7 @@ import view.UI;
 
 import java.util.HashMap;
 
+import static control.MyProtocol.DEBUGGING_MODE;
 import static java.util.Collections.max;
 
 /**
@@ -86,6 +87,7 @@ public class FragHandler implements Runnable {
      */
     public void addFragment(int fragID, String fragment) {
         fragments.put(fragID, fragment);
+        if (DEBUGGING_MODE) System.out.println("fragment " + fragID + "added to fragHandler " + this);
     }
 
     /**
@@ -95,10 +97,12 @@ public class FragHandler implements Runnable {
      */
     public void addFragment(Fragment fragment) {
         addFragment(fragment.getHeader().getFragNum(), fragment.getMessagePart());
-        System.out.println(this);
-        System.out.println("fragment with sequence " + fragment.getHeader().getSeqNum() + " and frag " + fragment.getHeader().getFragNum());
-        System.out.println("fragments length " + fragments.size());
-        System.out.println("data length set to " + fragment.getHeader().getDataLen());
+        if (DEBUGGING_MODE) {
+            System.out.println(this);
+            System.out.println("fragment with sequence " + fragment.getHeader().getSeqNum() + " and frag " + fragment.getHeader().getFragNum());
+            System.out.println("fragments length " + fragments.size());
+            System.out.println("data length set to " + fragment.getHeader().getDataLen());
+        }
     }
 
     /**
@@ -121,12 +125,14 @@ public class FragHandler implements Runnable {
         // for a message to be complete means that the final segment has been received,
         // and that the length of the fragments list equals the ID of the last fragment
         if (fragments.isEmpty()) return false;
-        System.out.println("does not always return false");
+        if (DEBUGGING_MODE) System.out.println("does not always return false");
         int highestID = max(fragments.keySet());
         String lastFragment = fragments.get(highestID);
-        System.out.println(lastFragment);
-        System.out.println(lastFragment.endsWith(delimiter));
-        System.out.println(fragments.size());
+        if (DEBUGGING_MODE) {
+            System.out.println(lastFragment);
+            System.out.println(lastFragment.endsWith(delimiter));
+            System.out.println(fragments.size());
+        }
         return lastFragment.endsWith(delimiter) && fragments.size() == highestID + 1;
     }
 }

@@ -30,13 +30,16 @@ public class Test {
 //				System.out.println(integer);
 //			}
 //		}
-		String[] numbers = new String[]{"00000000", "01000000", "10000000", "11000000"};
-		for (int i = 0; i < 4; i++) {
-			byte b = stringToByte(numbers[i]);
-			String s = byteToString(b).substring(0, 2);
-			b = stringToByte(s);
-			System.out.println(b);
-		}
+//		String[] numbers = new String[]{"00000000", "01000000", "10000000", "11000000"};
+//		for (int i = 0; i < 4; i++) {
+//			byte b = stringToByte(numbers[i]);
+//			String s = byteToString(b).substring(0, 2);
+//			b = stringToByte(s);
+//			System.out.println(b);
+//		}
+		System.out.println(numPackets(29));
+		System.out.println(numPackets(58));
+		System.out.println(numPackets(32));
 	}
 
 	public static String bytesToString(byte[] input, boolean addZeroes) {
@@ -58,4 +61,17 @@ public class Test {
 		}
 		return string.toString();
 	}
+
+	private static int numPackets(int n) {
+//        int extra = 1;
+//        if (n % 29 == 0) {
+//            extra = 0;
+//        }
+//        return (n - n % 29) / 29 + extra;
+        if (n <= 29) return 1;
+        int amount = n + 1; // add 1 for end of text character
+		double num = ((double) amount / 29) + 0.999;
+		System.out.println(num);
+        return (int) num; // divide by 29 to get the amount of packets, by adding 0.999 it will always round up except for with whole numbers
+    }
 }

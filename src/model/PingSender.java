@@ -1,27 +1,29 @@
 package model;
 
 import control.Client;
-import control.MyProtocol;
 import control.Ping;
-
-import java.util.Arrays;
 
 import static control.MyProtocol.*;
 
+/**
+ * Sends pings.
+ */
 public class PingSender implements Runnable {
     Ping ping;
     Client client;
-    int pingCounter = 0;
+    long timeout;
 
     /**
      * Constructor for a ping sender.
      *
      * @param nodeID source from which the ping is sent
      * @param client client from which the ping is sent
+     * @param timeout the amount of milliseconds between pings
      */
-    public PingSender(int nodeID, Client client) {
+    public PingSender(int nodeID, Client client, long timeout) {
         this.ping = new Ping(nodeID);
         this.client = client;
+        this.timeout = timeout;
     }
 
     /**
@@ -30,9 +32,9 @@ public class PingSender implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(20000);
+                Thread.sleep(timeout);
             } catch (InterruptedException e) { }
-            System.out.println("ping");
+            if (DEBUGGING_MODE) System.out.println("ping");
             sendPacket(ping.toBytes(), true);
         }
     }
