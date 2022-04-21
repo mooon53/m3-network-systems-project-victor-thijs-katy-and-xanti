@@ -11,31 +11,45 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import control.Fragment;
+import control.Header;
+import model.FragHandler;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import utils.HelpFunc;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Tests PacketEncoder.
+ */
 public class PacketEncoderTest {
 
-    public static void main(String[] args) throws IOException {
-//        int nodeID = 0;
-//        int sequenceNumber = 0;
-//
-//        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        String input;
-//
-//        UI ui = new UI();
-//        input = ui.getInput(br);
-//        while (input.length() > 463) {
-//            input = ui.getInput(br, "Please put in a message " +
-//                    "with a maximum of 463 characters");
-//        }
-//        byte[] inputBytes = input.getBytes(); // get bytes from input
-//        Header standardHeader = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
-//                0, nodeID, 0);
-//        PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
-//
-//        for (byte[] packet : packetEncoder.fragmentedMessage()) {
-//            PacketDecoder packetDecoder = new PacketDecoder(packet);
-//            packetDecoder.decode();
-//            DebugInterface.printHeaderInformation(packetDecoder.getHeader());
-//        }
+
+    @Test
+    void testNumPackets() {
+        String string;
+    }
+
+    @Test
+    void testFragmentedMessage() {
+        int nodeID = 0;
+        int sequenceNumber = 0;
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String input;
+
+        input = "";
+        byte[] inputBytes = input.getBytes(); // get bytes from input
+        Header standardHeader = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
+                0, nodeID, 0);
+        PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
+        packetEncoder.fragmentedMessage();
+
     }
 
 }
