@@ -53,7 +53,6 @@ public class Header {
         dest = Integer.valueOf(firstByte.substring(2, 4), 2);
         syn = Integer.parseInt(firstByte.substring(4, 5)) == 1;
         ack = Integer.parseInt(firstByte.substring(5, 6)) == 1;
-        System.out.println("frag flag = " + Integer.parseInt(firstByte.substring(6, 7)));
         frag = Integer.parseInt(firstByte.substring(6, 7)) == 1;
         dm = Integer.parseInt(firstByte.substring(7, 8)) == 1;
 
