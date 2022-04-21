@@ -1,5 +1,7 @@
 package control;
 
+import java.util.Random;
+
 import static control.MyProtocol.DEBUGGING_MODE;
 
 public class PacketRetransmitter implements Runnable {
@@ -32,21 +34,23 @@ public class PacketRetransmitter implements Runnable {
      * Resends if not everyone in range has acknowledged the packet.
      */
     public void run() {
+        Random random = new Random();
         // TODO: check if everyone in range has received the packet this transmitter was made for
         boolean received = false;
         try {
             while (!received) {
                 if (DEBUGGING_MODE) System.out.println("Not everyone received, starting sleep");
-                Thread.sleep(5000); // Wait 10 seconds
-                if (!packetStorage.checkReceivers(nodeID, seqNum, fragNum) && attempts < 10) {
+                int randomTime = 1000 * random.nextInt(5);
+                Thread.sleep(5000 + randomTime); // Wait a random time 5-10  seconds
+                if (!packetStorage.checkReceivers(nodeID, seqNum, fragNum) && attempts < 5) {
                     if (DEBUGGING_MODE) System.out.println("sleep over, resending");
                     packetStorage.resendPacket(nodeID, seqNum, fragNum);
                     attempts++;
                 } else received = true;
             }
             if (DEBUGGING_MODE) System.out.println("everyone has received this packet");
-            Thread.sleep(60000);
-            packetStorage.removePacket(nodeID, seqNum, fragNum);
+//            Thread.sleep(60000);
+//            packetStorage.removePacket(nodeID, seqNum, fragNum);
         } catch (InterruptedException e) { }
     }
 }

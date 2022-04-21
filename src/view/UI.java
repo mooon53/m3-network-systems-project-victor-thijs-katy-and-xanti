@@ -11,6 +11,13 @@ import java.io.IOException;
  * User interface class.
  */
 public class UI {
+    public static final String ANSI_PURPLE = "\033[0;35m";
+    public static final String ANSI_GREEN = "\033[0;32m";
+    public static final String ANSI_BLUE = "\033[0;34m";
+    public static final String ANSI_YELLOW = "\033[0;33m";
+    public static final String ANSI_RESET = "\u001B[0m";
+    static String[] colours = new String[]{ANSI_PURPLE, ANSI_GREEN, ANSI_BLUE, ANSI_YELLOW};
+
     /**
      * Prints a message.
      *
@@ -20,7 +27,8 @@ public class UI {
         if (MyProtocol.DEBUGGING_MODE) {
             System.out.println();
         }
-        System.out.println("[" + message.getSourceID() + "]: " + message);
+        String colour = colours[message.getSourceID()];
+        System.out.println(colour + "[" + message.getSourceID() + "]: " + message + ANSI_RESET);
     }
 
     public static void printFragment(Fragment fragment) {

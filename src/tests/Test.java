@@ -3,12 +3,15 @@ package tests;
 
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import static utils.HelpFunc.*;
 
 @SuppressWarnings("InvisibleCharacter")
 public class Test {
 	boolean test = true;
+	static HashMap<Integer, String> testMap = new HashMap<>();
 
 	public static void main(String[] args) {
 //		byte b = 0x03;
@@ -37,9 +40,11 @@ public class Test {
 //			b = stringToByte(s);
 //			System.out.println(b);
 //		}
-		System.out.println(numPackets(29));
-		System.out.println(numPackets(58));
-		System.out.println(numPackets(32));
+//		System.out.println(numPackets(29));
+//		System.out.println(numPackets(58));
+//		System.out.println(numPackets(32));
+		String help = testMap.get(0);
+		System.out.println(help);
 	}
 
 	public static String bytesToString(byte[] input, boolean addZeroes) {
