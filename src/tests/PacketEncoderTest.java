@@ -28,28 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests PacketEncoder.
  */
 public class PacketEncoderTest {
-
-
-    @Test
-    void testNumPackets() {
-        String string;
-    }
-
     @Test
     void testFragmentedMessage() {
-        int nodeID = 0;
-        int sequenceNumber = 0;
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String input;
-
-        input = "";
+        String input = "012345678901234567890123456789";
         byte[] inputBytes = input.getBytes(); // get bytes from input
-        Header standardHeader = new Header(nodeID, 0, false, false, false, false, sequenceNumber,
-                0, nodeID, 0);
+        Header standardHeader = new Header(0, 0, false, false, false, false, 0,
+                inputBytes.length, 0, 0);
         PacketEncoder packetEncoder = new PacketEncoder(inputBytes, standardHeader);
-        packetEncoder.fragmentedMessage();
+        byte[][] fragmentedMessage = packetEncoder.fragmentedMessage();
 
+        assertEquals(2, fragmentedMessage.length);
+
+        //check if the data-length bits are correct
+        assertEquals(7, fragmentedMessage[0][1]);
+        assertEquals(0, fragmentedMessage[1][1]);
     }
 
 }

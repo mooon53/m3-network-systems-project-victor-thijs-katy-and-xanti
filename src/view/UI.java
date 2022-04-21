@@ -49,7 +49,6 @@ public class UI {
         if (!prompt.equals("")) {
             System.out.println(prompt);
         }
-        System.out.print("> ");
         return br.readLine();
     }
 
