@@ -1,6 +1,7 @@
 package control;
 
 import model.*;
+import model.objects.*;
 import view.DebugInterface;
 import view.UI;
 
@@ -14,7 +15,7 @@ import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static control.PacketType.*;
+import static model.objects.PacketType.*;
 
 /**
  * The implementation of our protocol.

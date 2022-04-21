@@ -1,7 +1,7 @@
 package view;
 
-import control.Fragment;
-import control.Message;
+import model.objects.Fragment;
+import model.objects.Message;
 import control.MyProtocol;
 
 import java.io.BufferedReader;
@@ -35,7 +35,6 @@ public class UI {
         Message message = new Message(fragment);
         printMessage(message);
     }
-
 
     /**
      * Asks for an input from the user.

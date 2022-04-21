@@ -1,14 +1,16 @@
-package control;
+package model.objects;
 
+import control.*;
 import model.FragHandler;
+import model.PacketRetransmitter;
 import view.UI;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import static control.Client.*;
-import static control.PacketType.DATA;
+import static model.objects.Client.*;
+import static model.objects.PacketType.DATA;
 import static utils.HelpFunc.*;
 import static control.MyProtocol.*;
 

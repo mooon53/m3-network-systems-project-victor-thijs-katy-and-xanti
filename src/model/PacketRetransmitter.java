@@ -1,4 +1,6 @@
-package control;
+package model;
+
+import model.objects.PacketStorage;
 
 import java.util.Random;
 

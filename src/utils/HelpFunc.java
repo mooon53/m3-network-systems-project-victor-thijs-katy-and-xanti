@@ -8,79 +8,6 @@ import java.util.BitSet;
  */
 public class HelpFunc {
     /**
-     * Prints a given ByteBuffer.
-     *
-     * @param bytes       ByteBuffer which needs to be printed
-     * @param bytesLength length of the ByteBuffer
-     */
-    public static void printByteBuffer(ByteBuffer bytes, int bytesLength) {
-        // prints out the bytes in a ByteBuffer
-        System.out.print("DATA: ");
-        for (int i = 0; i < bytesLength; i++) {
-            System.out.print(bytes.get(i) + " ");
-        }
-        System.out.println();
-    }
-
-    /**
-     * Takes a bitset and makes it a byte.
-     *
-     * @param bitset bitset that needs to be converted
-     * @return byte corresponding to the given bitset
-     */
-    public static byte bitsetToByte(BitSet bitset) {
-        // simply converts every bitset that is smaller or equal to 8 bits to a byte
-        if (bitset.length() > 8) {
-            return 0;
-        }
-        return bitset.toByteArray()[0];
-    }
-
-    /**
-     * Takes a byte array and makes it a bitset.
-     *
-     * @param input byte array that needs to be converted
-     * @return bitset corresponding to the given byte array
-     */
-    public static BitSet bytesToBitSet(byte[] input) {
-        return BitSet.valueOf(input);
-    }
-
-
-    /**
-     * Concatenates bitsets to one bitset.
-     *
-     * @param bitsets bitsets that need to be concatenated
-     * @return concatenated bitset
-     */
-    public static BitSet concatBitSet(BitSet[] bitsets) {
-        BitSet output = new BitSet();
-        int index = 0;
-        for (int i = 0; i < bitsets.length; i++) {
-            if (i > 0) {
-                index += bitsets[i - 1].length();
-            }
-            for (int n = 0; n < bitsets[i].length(); n++) {
-                if (bitsets[i].get(n)) {
-                    output.set(index + n);
-                }
-            }
-        }
-        return output;
-    }
-
-    /**
-     * Gets the bit of a byte at a certain index.
-     *
-     * @param b     byte in which the bit is located
-     * @param index location of the wanted bit
-     * @return the bit in the byte at the wanted location
-     */
-    public static byte getBit(byte b, int index) {
-        return (byte) ((b >> 7 - index) & 1);
-    }
-
-    /**
      * Pads a string with 0's.
      *
      * @param input  the input string
@@ -122,18 +49,6 @@ public class HelpFunc {
      */
     public static byte setBit(byte input, int pos) {
         return setBit(input, pos, true);
-    }
-
-    /**
-     * Checks if a certain bit in a byte is true.
-     *
-     * @param input byte that needs to be checked
-     * @param pos   position of the bit that needs to be set to true
-     * @return true if the certain bit in the byte is true
-     */
-    public static boolean isSet(byte input, int pos) {
-        int mask = 1 << (8 - pos);
-        return (input & mask) == mask;
     }
 
     /**

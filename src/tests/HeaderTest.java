@@ -1,10 +1,7 @@
 package tests;
 
-import control.Fragment;
-import control.Header;
-import model.FragHandler;
+import model.objects.Header;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -1,4 +1,7 @@
-package control;
+package model.objects;
+
+import model.FragHandler;
+import model.PingSender;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -10,8 +13,6 @@ import java.util.concurrent.BlockingQueue;
 
 import static control.MyProtocol.DEBUGGING_MODE;
 import static view.DebugInterface.printPacket;
-
-import model.*;
 
 /**
  * Client object responsible for listening and sending.

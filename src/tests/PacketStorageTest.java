@@ -1,11 +1,8 @@
 package tests;
 
-import control.Client;
-import control.PacketStorage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import model.objects.Client;
+import model.objects.PacketStorage;
 import org.junit.jupiter.api.Test;
-import utils.HelpFunc;
 
 import java.util.concurrent.LinkedBlockingQueue;
 

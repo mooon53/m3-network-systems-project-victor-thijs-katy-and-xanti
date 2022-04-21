@@ -1,4 +1,4 @@
-package control;
+package model.objects;
 
 /**
  * Message object which is a complete message.

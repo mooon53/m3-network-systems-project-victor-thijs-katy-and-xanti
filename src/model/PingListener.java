@@ -1,6 +1,6 @@
 package model;
 
-import control.Client;
+import model.objects.Client;
 
 /**
  * Gets created when a ping is received, waits 1 minute and then sets the node to unreachable.

@@ -1,4 +1,4 @@
-package control;
+package model.objects;
 
 /**
  * Fragment object which is a fragment of a message.

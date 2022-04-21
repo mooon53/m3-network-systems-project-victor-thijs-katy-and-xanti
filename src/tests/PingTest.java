@@ -1,12 +1,7 @@
 package tests;
 
-import control.Ping;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import model.objects.Ping;
 import org.junit.jupiter.api.Test;
-import utils.HelpFunc;
-
-import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;

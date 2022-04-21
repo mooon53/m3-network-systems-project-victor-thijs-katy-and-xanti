@@ -1,13 +1,15 @@
 package model;
 
 import control.*;
-import view.*;
+import model.objects.Fragment;
+import model.objects.Header;
+import model.objects.Packet;
+import model.objects.PacketStorage;
 
 import java.nio.charset.StandardCharsets;
 
 import static control.MyProtocol.DEBUGGING_MODE;
 import static utils.HelpFunc.*;
-import static control.Client.*;
 
 /**
  * Decodes a packet, converting all the bytes into the needed information.

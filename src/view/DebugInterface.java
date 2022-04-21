@@ -1,7 +1,8 @@
 package view;
 
-import control.*;
-import model.PacketDecoder;
+import model.objects.Header;
+import model.objects.Packet;
+import model.objects.PacketType;
 
 import java.util.Arrays;
 

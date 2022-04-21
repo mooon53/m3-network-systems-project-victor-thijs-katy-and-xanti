@@ -1,7 +1,7 @@
 package model;
 
-import control.Client;
-import control.Ping;
+import model.objects.Client;
+import model.objects.Ping;
 
 import static control.MyProtocol.*;
 

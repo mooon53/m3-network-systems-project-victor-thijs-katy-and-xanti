@@ -1,6 +1,6 @@
 package model;
 
-import control.Header;
+import model.objects.Header;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package control;
+package model.objects;
 
 /**
  * Enum for all the different packet types.

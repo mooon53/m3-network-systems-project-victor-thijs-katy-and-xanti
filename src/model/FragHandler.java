@@ -1,7 +1,7 @@
 package model;
 
-import control.Fragment;
-import control.Message;
+import model.objects.Fragment;
+import model.objects.Message;
 import view.UI;
 
 import java.util.HashMap;
